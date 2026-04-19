@@ -1,5 +1,5 @@
 <template>
-  <div class="dashboard" ref="rootRef" :class="{ fullscreen: isFullscreen }">
+  <div class="dashboard" ref="rootRef">
     <header class="topbar">
       <div class="left">
         <span class="dot" />
@@ -18,34 +18,30 @@
       </div>
     </header>
 
-    <div class="grid">
-      <!-- 顶部统计 -->
-      <el-row :gutter="12" class="stat-row">
-        <el-col :span="3" v-for="s in stats" :key="s.label">
-          <div class="stat-card">
-            <div class="label">{{ s.label }}</div>
-            <div class="value" :style="{ color: s.color }">
-              <span class="num">{{ s.value }}</span>
-              <span class="unit">{{ s.unit }}</span>
-            </div>
+    <!-- 主区：CSS Grid 严格控制高度 -->
+    <main class="grid">
+      <!-- 顶部 8 项指标 -->
+      <section class="row stat-row">
+        <div v-for="s in stats" :key="s.label" class="stat-card">
+          <div class="label">{{ s.label }}</div>
+          <div class="value" :style="{ color: s.color }">
+            <span class="num">{{ s.value }}</span>
+            <span class="unit">{{ s.unit }}</span>
           </div>
-        </el-col>
-      </el-row>
+        </div>
+      </section>
 
-      <!-- 中部主区 -->
-      <el-row :gutter="12" class="main-row">
-        <el-col :span="6" class="col-stack">
-          <div class="panel grow">
-            <div class="panel-title">预警等级分布</div>
-            <div ref="pie1Ref" class="chart fill" />
-          </div>
-          <div class="panel grow">
-            <div class="panel-title">班级活力指数 TOP 8</div>
-            <div ref="bar1Ref" class="chart fill" />
-          </div>
-        </el-col>
-
-        <el-col :span="12" class="col-stack">
+      <!-- 主区三列 -->
+      <section class="row main-row">
+        <!-- 左列 -->
+        <div class="col">
+          <div class="panel"><div class="panel-title">预警等级分布</div>
+            <div ref="pie1Ref" class="chart" /></div>
+          <div class="panel"><div class="panel-title">班级活力指数 TOP 8</div>
+            <div ref="bar1Ref" class="chart" /></div>
+        </div>
+        <!-- 中列 -->
+        <div class="col mid">
           <div class="panel hero">
             <div class="hero-bg" />
             <div class="hero-content">
@@ -58,86 +54,56 @@
               </div>
             </div>
           </div>
-          <div class="panel grow">
-            <div class="panel-title">近 30 天情绪健康指数曲线</div>
-            <div ref="lineRef" class="chart fill" />
-          </div>
-        </el-col>
+          <div class="panel"><div class="panel-title">近 30 天情绪健康指数曲线</div>
+            <div ref="lineRef" class="chart" /></div>
+        </div>
+        <!-- 右列 -->
+        <div class="col">
+          <div class="panel"><div class="panel-title">今日课堂行为分布</div>
+            <div ref="pie2Ref" class="chart" /></div>
+          <div class="panel"><div class="panel-title">今日表情识别分布</div>
+            <div ref="rose1Ref" class="chart" /></div>
+        </div>
+      </section>
 
-        <el-col :span="6" class="col-stack">
-          <div class="panel grow">
-            <div class="panel-title">今日课堂行为分布</div>
-            <div ref="pie2Ref" class="chart fill" />
-          </div>
-          <div class="panel grow">
-            <div class="panel-title">今日表情识别分布</div>
-            <div ref="rose1Ref" class="chart fill" />
-          </div>
-        </el-col>
-      </el-row>
-
-      <!-- 底部 -->
-      <el-row :gutter="12" class="bottom-row">
-        <el-col :span="12" class="col-stack">
-          <div class="panel grow">
-            <div class="panel-title">实时预警动态</div>
-            <div class="alert-stream fill">
-              <div v-for="a in data?.recent_alerts || []" :key="a.id" class="alert-item">
-                <span class="time">{{ a.created_at }}</span>
-                <el-tag :type="levelTag(a.level)" effect="dark" size="small">
-                  {{ levelLabel(a.level) }}
-                </el-tag>
-                <strong>{{ a.student_name }}</strong>
-                <span class="reason">{{ a.first_reason }}</span>
-                <span class="score" :style="{ color: levelColor(a.level) }">
-                  {{ a.score.toFixed(0) }}分
-                </span>
-              </div>
-              <div v-if="!data?.recent_alerts?.length" class="empty">暂无预警 · 一切平安</div>
+      <!-- 底部两列 -->
+      <section class="row bottom-row">
+        <div class="panel">
+          <div class="panel-title">实时预警动态</div>
+          <div class="alert-stream">
+            <div v-for="a in data?.recent_alerts || []" :key="a.id" class="alert-item">
+              <span class="time">{{ a.created_at }}</span>
+              <el-tag :type="levelTag(a.level)" effect="dark" size="small">
+                {{ levelLabel(a.level) }}
+              </el-tag>
+              <strong>{{ a.student_name }}</strong>
+              <span class="reason">{{ a.first_reason }}</span>
+              <span class="score" :style="{ color: levelColor(a.level) }">
+                {{ a.score.toFixed(0) }}分
+              </span>
             </div>
+            <div v-if="!data?.recent_alerts?.length" class="empty">暂无预警 · 一切平安</div>
           </div>
-        </el-col>
-        <el-col :span="12" class="col-stack">
-          <div class="panel grow">
-            <div class="panel-title">高风险学生 TOP 10</div>
-            <div class="table-wrap fill">
-              <el-table
-                :data="data?.top_risk || []"
-                :show-header="true"
-                :row-style="() => ({ background: 'transparent', color: '#cbd5e1' })"
-                :header-cell-style="{ background: 'transparent', color: '#94a3b8', borderBottom: '1px solid rgba(14,165,233,0.2)' }"
-                :cell-style="{ borderBottom: '1px solid rgba(14,165,233,0.05)' }"
-                style="--el-table-bg-color: transparent; background: transparent"
-                size="small"
-                height="100%"
-              >
-                <el-table-column label="级别" width="70">
-                  <template #default="{ row }">
-                    <el-tag :type="levelTag(row.level)" effect="dark" size="small">
-                      {{ levelLabel(row.level) }}
-                    </el-tag>
-                  </template>
-                </el-table-column>
-                <el-table-column label="评分" width="70">
-                  <template #default="{ row }">
-                    <strong :style="{ color: levelColor(row.level) }">{{ row.score }}</strong>
-                  </template>
-                </el-table-column>
-                <el-table-column prop="student_name" label="学生" />
-                <el-table-column label="" width="70">
-                  <template #default="{ row }">
-                    <el-button text style="color:#0ea5e9" size="small"
-                      @click="$router.push(`/psychology/student/${row.student_id}`)">
-                      档案
-                    </el-button>
-                  </template>
-                </el-table-column>
-              </el-table>
+        </div>
+        <div class="panel">
+          <div class="panel-title">高风险学生 TOP 10</div>
+          <div class="risk-list">
+            <div v-for="r in data?.top_risk || []" :key="r.student_id" class="risk-row">
+              <el-tag :type="levelTag(r.level)" effect="dark" size="small">
+                {{ levelLabel(r.level) }}
+              </el-tag>
+              <strong :style="{ color: levelColor(r.level), width: '40px' }">{{ r.score }}</strong>
+              <span class="name">{{ r.student_name }}</span>
+              <el-button text style="color:#0ea5e9" size="small"
+                @click="$router.push(`/psychology/student/${r.student_id}`)">
+                档案
+              </el-button>
             </div>
+            <div v-if="!data?.top_risk?.length" class="empty">暂无高风险学生</div>
           </div>
-        </el-col>
-      </el-row>
-    </div>
+        </div>
+      </section>
+    </main>
 
     <footer class="footer">
       负责任的 AI · 守护每一株青苗 · 全国大学生计算机设计大赛人工智能应用赛道作品
@@ -212,6 +178,7 @@ async function load() {
   data.value = await getDashboardAll()
   await nextTick()
   render()
+  setTimeout(onResize, 50) // 数据加载后再做一次 resize，确保 ECharts 准确布局
 }
 
 const COLORS = ['#22d3ee', '#a78bfa', '#34d399', '#f59e0b', '#ef4444', '#0ea5e9', '#facc15', '#22c55e']
@@ -236,7 +203,7 @@ function render() {
       legend: { bottom: 0, textStyle: { color: '#94a3b8' } },
       series: [{
         type: 'pie',
-        radius: ['40%', '70%'],
+        radius: ['38%', '68%'],
         center: ['50%', '45%'],
         data: [
           { name: '紧急', value: map.red || 0, itemStyle: { color: '#ef4444' } },
@@ -256,13 +223,9 @@ function render() {
     bar1.setOption({
       backgroundColor: 'transparent',
       tooltip: { trigger: 'axis' },
-      grid: { left: 80, right: 30, top: 10, bottom: 10, containLabel: true },
+      grid: { left: 10, right: 30, top: 6, bottom: 6, containLabel: true },
       xAxis: { type: 'value', min: 0, max: 100, ...darkAxis() },
-      yAxis: {
-        type: 'category',
-        data: items.map((c) => c.class_name),
-        ...darkAxis(),
-      },
+      yAxis: { type: 'category', data: items.map((c) => c.class_name), ...darkAxis() },
       series: [{
         type: 'bar',
         data: items.map((c) => ({
@@ -282,7 +245,7 @@ function render() {
     line.setOption({
       backgroundColor: 'transparent',
       tooltip: { trigger: 'axis' },
-      grid: { left: 16, right: 16, top: 16, bottom: 8, containLabel: true },
+      grid: { left: 10, right: 16, top: 10, bottom: 6, containLabel: true },
       xAxis: { type: 'category', data: tl.map((p) => p.date), ...darkAxis() },
       yAxis: { type: 'value', min: 0, max: 100, ...darkAxis() },
       series: [{
@@ -310,7 +273,7 @@ function render() {
       legend: { bottom: 0, textStyle: { color: '#94a3b8' }, type: 'scroll' },
       series: [{
         type: 'pie',
-        radius: ['40%', '70%'],
+        radius: ['38%', '68%'],
         center: ['50%', '45%'],
         data: data.value.behavior_today.items.map((d, i) => ({
           ...d,
@@ -330,7 +293,7 @@ function render() {
       legend: { bottom: 0, textStyle: { color: '#94a3b8' }, type: 'scroll' },
       series: [{
         type: 'pie',
-        radius: [20, 80],
+        radius: [16, 70],
         center: ['50%', '45%'],
         roseType: 'area',
         data: data.value.emotion_today.items.map((d, i) => ({
@@ -371,6 +334,13 @@ onMounted(() => {
   refreshTimer = setInterval(load, 15000)
   window.addEventListener('resize', onResize)
   document.addEventListener('fullscreenchange', onFsChange)
+
+  // 尝试自动进入浏览器全屏（多数浏览器要求用户手势触发，失败时静默）
+  setTimeout(() => {
+    if (!document.fullscreenElement) {
+      rootRef.value?.requestFullscreen?.().catch(() => {})
+    }
+  }, 300)
 })
 
 onBeforeUnmount(() => {
@@ -386,6 +356,7 @@ onBeforeUnmount(() => {
 </script>
 
 <style lang="scss" scoped>
+/* ============== 容器 ============== */
 .dashboard {
   position: fixed;
   inset: 0;
@@ -393,9 +364,11 @@ onBeforeUnmount(() => {
   color: #cbd5e1;
   z-index: 9999;
   font-family: -apple-system, "PingFang SC", sans-serif;
-  display: flex;
-  flex-direction: column;
   overflow: hidden;
+
+  /* CSS Grid：顶栏 / 主区 / 底栏 三段 */
+  display: grid;
+  grid-template-rows: 52px 1fr 28px;
 
   &::before {
     content: '';
@@ -410,16 +383,20 @@ onBeforeUnmount(() => {
   }
 }
 
-.topbar {
+.topbar,
+.grid,
+.footer {
   position: relative;
   z-index: 1;
-  flex-shrink: 0;
+}
+
+/* ============== 顶栏 ============== */
+.topbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 24px;
+  padding: 0 24px;
   border-bottom: 1px solid rgba(14, 165, 233, 0.15);
-  height: 52px;
   .left, .right {
     flex: 1;
     display: flex;
@@ -428,12 +405,9 @@ onBeforeUnmount(() => {
     color: #94a3b8;
     font-size: 13px;
   }
-  .right {
-    justify-content: flex-end;
-  }
+  .right { justify-content: flex-end; }
   .dot {
-    width: 8px;
-    height: 8px;
+    width: 8px; height: 8px;
     background: #22c55e;
     border-radius: 50%;
     box-shadow: 0 0 8px #22c55e;
@@ -457,65 +431,59 @@ onBeforeUnmount(() => {
   50% { opacity: 0.4; }
 }
 
+/* ============== 主区 Grid ============== */
 .grid {
-  position: relative;
-  z-index: 1;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  /* 三行：指标卡 / 主区 / 底部 */
+  grid-template-rows: auto 1.4fr 1fr;
   gap: 12px;
   padding: 12px 16px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.row {
+  display: grid;
+  gap: 12px;
   min-height: 0;
 }
 
 .stat-row {
-  flex-shrink: 0;
+  grid-template-columns: repeat(8, 1fr);
 }
 
 .main-row {
-  flex: 1.2;
-  min-height: 0;
+  grid-template-columns: 1fr 1.4fr 1fr;
 }
 
 .bottom-row {
-  flex: 1;
+  grid-template-columns: 1fr 1fr;
+}
+
+.col {
+  display: grid;
+  grid-template-rows: 1fr 1fr;
+  gap: 12px;
   min-height: 0;
 }
 
-.main-row .el-col,
-.bottom-row .el-col {
-  height: 100%;
+.col.mid {
+  /* 中列：hero 占 32%，曲线占剩余 68%，让曲线足够大 */
+  grid-template-rows: 32% 1fr;
 }
 
-.col-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  height: 100%;
-}
-
+/* ============== 卡片 / 面板 ============== */
 .stat-card {
   border: 1px solid rgba(14, 165, 233, 0.2);
   border-radius: 8px;
   padding: 8px 6px;
   text-align: center;
   background: linear-gradient(180deg, rgba(14, 165, 233, 0.06), rgba(14, 165, 233, 0.01));
-  .label {
-    color: #94a3b8;
-    font-size: 12px;
-  }
+  .label { color: #94a3b8; font-size: 12px; }
   .value {
     margin-top: 4px;
-    .num {
-      font-size: 22px;
-      font-weight: 800;
-      letter-spacing: 1px;
-    }
-    .unit {
-      font-size: 11px;
-      color: #94a3b8;
-      margin-left: 4px;
-    }
+    .num { font-size: 22px; font-weight: 800; letter-spacing: 1px; }
+    .unit { font-size: 11px; color: #94a3b8; margin-left: 4px; }
   }
 }
 
@@ -528,26 +496,20 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  &.grow {
-    flex: 1;
-  }
-  &::before {
+  overflow: hidden;
+  &::before, &::after {
     content: '';
     position: absolute;
-    top: -1px;
-    left: -1px;
     width: 12px;
     height: 12px;
+  }
+  &::before {
+    top: -1px; left: -1px;
     border-top: 2px solid #22d3ee;
     border-left: 2px solid #22d3ee;
   }
   &::after {
-    content: '';
-    position: absolute;
-    bottom: -1px;
-    right: -1px;
-    width: 12px;
-    height: 12px;
+    bottom: -1px; right: -1px;
     border-bottom: 2px solid #22d3ee;
     border-right: 2px solid #22d3ee;
   }
@@ -565,21 +527,17 @@ onBeforeUnmount(() => {
 }
 
 .chart {
+  flex: 1;
+  min-height: 0;
   width: 100%;
-  &.fill {
-    flex: 1;
-    min-height: 0;
-  }
 }
 
+/* ============== Hero 巨型指数 ============== */
 .panel.hero {
-  flex: 0 0 auto;
   text-align: center;
   padding: 12px;
   position: relative;
   overflow: hidden;
-  height: 36%;
-  min-height: 160px;
   .hero-bg {
     position: absolute;
     inset: -10%;
@@ -595,7 +553,7 @@ onBeforeUnmount(() => {
     align-items: center;
   }
   .hero-num {
-    font-size: 72px;
+    font-size: 64px;
     font-weight: 900;
     letter-spacing: 4px;
     line-height: 1;
@@ -605,7 +563,7 @@ onBeforeUnmount(() => {
     margin-top: 8px;
     color: #94a3b8;
     letter-spacing: 4px;
-    font-size: 14px;
+    font-size: 13px;
   }
   .hero-trend {
     margin-top: 4px;
@@ -619,16 +577,15 @@ onBeforeUnmount(() => {
   to { transform: rotate(360deg); }
 }
 
+/* ============== 预警流 ============== */
 .alert-stream {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 6px;
-  overflow-y: auto;
   padding-right: 4px;
-  &.fill {
-    flex: 1;
-    min-height: 0;
-  }
   .alert-item {
     display: flex;
     align-items: center;
@@ -638,11 +595,7 @@ onBeforeUnmount(() => {
     border-radius: 4px;
     border-left: 3px solid #0ea5e9;
     flex-shrink: 0;
-    .time {
-      color: #64748b;
-      font-size: 12px;
-      min-width: 50px;
-    }
+    .time { color: #64748b; font-size: 12px; min-width: 50px; }
     .reason {
       flex: 1;
       color: #94a3b8;
@@ -651,58 +604,39 @@ onBeforeUnmount(() => {
       white-space: nowrap;
       text-overflow: ellipsis;
     }
-    .score {
-      font-weight: 700;
-    }
+    .score { font-weight: 700; }
   }
-  .empty {
-    color: #94a3b8;
-    text-align: center;
-    padding: 40px 0;
-  }
+  .empty { color: #94a3b8; text-align: center; padding: 40px 0; }
 }
 
-.table-wrap {
-  &.fill {
-    flex: 1;
-    min-height: 0;
-    overflow: hidden;
+/* ============== 风险列表（替代 el-table） ============== */
+.risk-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  padding-right: 4px;
+  .risk-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 10px;
+    border-bottom: 1px solid rgba(14, 165, 233, 0.06);
+    flex-shrink: 0;
+    &:nth-child(even) { background: rgba(14, 165, 233, 0.03); }
+    .name { flex: 1; color: #cbd5e1; }
   }
-  :deep(.el-table) {
-    height: 100% !important;
-    background: transparent !important;
-  }
-  :deep(.el-table__inner-wrapper) {
-    height: 100%;
-  }
-  :deep(.el-table__body-wrapper) {
-    background: transparent !important;
-  }
-  :deep(.el-table tr),
-  :deep(.el-table__row) {
-    background: transparent !important;
-  }
-  :deep(.el-table--striped .el-table__row.el-table__row--striped td.el-table__cell) {
-    background: rgba(14, 165, 233, 0.04) !important;
-  }
-  :deep(.el-table::before),
-  :deep(.el-table::after) {
-    display: none;
-  }
+  .empty { color: #94a3b8; text-align: center; padding: 40px 0; }
 }
 
 .footer {
-  position: relative;
-  z-index: 1;
-  flex-shrink: 0;
   text-align: center;
   color: #64748b;
   font-size: 11px;
-  padding: 6px 0 8px;
   letter-spacing: 4px;
-}
-
-.dashboard.fullscreen {
-  // 浏览器原生全屏时由 :fullscreen 伪类生效，下面规则已覆盖
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 </style>
