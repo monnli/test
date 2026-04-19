@@ -1,6 +1,5 @@
 <template>
-  <div class="dashboard">
-    <!-- 顶栏 -->
+  <div class="dashboard" ref="rootRef" :class="{ fullscreen: isFullscreen }">
     <header class="topbar">
       <div class="left">
         <span class="dot" />
@@ -9,15 +8,19 @@
       <div class="title">青苗守护者 · 校园心理健康综合数据大屏</div>
       <div class="right">
         <el-tag effect="dark" type="success" round>系统运行中</el-tag>
+        <el-button text style="color:#94a3b8" @click="toggleFullscreen">
+          <el-icon><FullScreen /></el-icon>
+          {{ isFullscreen ? '退出全屏' : '全屏' }}
+        </el-button>
         <el-button text style="color:#94a3b8" @click="$router.push('/workbench')">
-          <el-icon><Back /></el-icon>返回工作台
+          <el-icon><Back /></el-icon>返回
         </el-button>
       </div>
     </header>
 
     <div class="grid">
       <!-- 顶部统计 -->
-      <el-row :gutter="16" class="stat-row">
+      <el-row :gutter="12" class="stat-row">
         <el-col :span="3" v-for="s in stats" :key="s.label">
           <div class="stat-card">
             <div class="label">{{ s.label }}</div>
@@ -29,21 +32,20 @@
         </el-col>
       </el-row>
 
-      <el-row :gutter="16" class="main-row">
-        <!-- 左列 -->
-        <el-col :span="6">
-          <div class="panel">
+      <!-- 中部主区 -->
+      <el-row :gutter="12" class="main-row">
+        <el-col :span="6" class="col-stack">
+          <div class="panel grow">
             <div class="panel-title">预警等级分布</div>
-            <div ref="pie1Ref" class="chart" />
+            <div ref="pie1Ref" class="chart fill" />
           </div>
-          <div class="panel">
+          <div class="panel grow">
             <div class="panel-title">班级活力指数 TOP 8</div>
-            <div ref="bar1Ref" class="chart" />
+            <div ref="bar1Ref" class="chart fill" />
           </div>
         </el-col>
 
-        <!-- 中列：核心 -->
-        <el-col :span="12">
+        <el-col :span="12" class="col-stack">
           <div class="panel hero">
             <div class="hero-bg" />
             <div class="hero-content">
@@ -56,30 +58,30 @@
               </div>
             </div>
           </div>
-          <div class="panel">
+          <div class="panel grow">
             <div class="panel-title">近 30 天情绪健康指数曲线</div>
-            <div ref="lineRef" class="chart big" />
+            <div ref="lineRef" class="chart fill" />
           </div>
         </el-col>
 
-        <!-- 右列 -->
-        <el-col :span="6">
-          <div class="panel">
+        <el-col :span="6" class="col-stack">
+          <div class="panel grow">
             <div class="panel-title">今日课堂行为分布</div>
-            <div ref="pie2Ref" class="chart" />
+            <div ref="pie2Ref" class="chart fill" />
           </div>
-          <div class="panel">
+          <div class="panel grow">
             <div class="panel-title">今日表情识别分布</div>
-            <div ref="rose1Ref" class="chart" />
+            <div ref="rose1Ref" class="chart fill" />
           </div>
         </el-col>
       </el-row>
 
-      <el-row :gutter="16" class="bottom-row">
-        <el-col :span="12">
-          <div class="panel">
+      <!-- 底部 -->
+      <el-row :gutter="12" class="bottom-row">
+        <el-col :span="12" class="col-stack">
+          <div class="panel grow">
             <div class="panel-title">实时预警动态</div>
-            <div class="alert-stream">
+            <div class="alert-stream fill">
               <div v-for="a in data?.recent_alerts || []" :key="a.id" class="alert-item">
                 <span class="time">{{ a.created_at }}</span>
                 <el-tag :type="levelTag(a.level)" effect="dark" size="small">
@@ -95,39 +97,43 @@
             </div>
           </div>
         </el-col>
-        <el-col :span="12">
-          <div class="panel">
+        <el-col :span="12" class="col-stack">
+          <div class="panel grow">
             <div class="panel-title">高风险学生 TOP 10</div>
-            <el-table
-              :data="data?.top_risk || []"
-              :show-header="true"
-              :row-style="() => ({ background: 'transparent', color: '#cbd5e1' })"
-              :header-cell-style="{ background: 'transparent', color: '#94a3b8', borderBottom: '1px solid rgba(14,165,233,0.2)' }"
-              :cell-style="{ borderBottom: '1px solid rgba(14,165,233,0.05)' }"
-              style="--el-table-bg-color: transparent; background: transparent"
-              stripe
-            >
-              <el-table-column label="级别" width="80">
-                <template #default="{ row }">
-                  <el-tag :type="levelTag(row.level)" effect="dark" size="small">
-                    {{ levelLabel(row.level) }}
-                  </el-tag>
-                </template>
-              </el-table-column>
-              <el-table-column label="评分" width="80">
-                <template #default="{ row }">
-                  <strong :style="{ color: levelColor(row.level) }">{{ row.score }}</strong>
-                </template>
-              </el-table-column>
-              <el-table-column prop="student_name" label="学生" />
-              <el-table-column label="" width="80">
-                <template #default="{ row }">
-                  <el-button text style="color:#0ea5e9" @click="$router.push(`/psychology/student/${row.student_id}`)">
-                    档案
-                  </el-button>
-                </template>
-              </el-table-column>
-            </el-table>
+            <div class="table-wrap fill">
+              <el-table
+                :data="data?.top_risk || []"
+                :show-header="true"
+                :row-style="() => ({ background: 'transparent', color: '#cbd5e1' })"
+                :header-cell-style="{ background: 'transparent', color: '#94a3b8', borderBottom: '1px solid rgba(14,165,233,0.2)' }"
+                :cell-style="{ borderBottom: '1px solid rgba(14,165,233,0.05)' }"
+                style="--el-table-bg-color: transparent; background: transparent"
+                size="small"
+                height="100%"
+              >
+                <el-table-column label="级别" width="70">
+                  <template #default="{ row }">
+                    <el-tag :type="levelTag(row.level)" effect="dark" size="small">
+                      {{ levelLabel(row.level) }}
+                    </el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column label="评分" width="70">
+                  <template #default="{ row }">
+                    <strong :style="{ color: levelColor(row.level) }">{{ row.score }}</strong>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="student_name" label="学生" />
+                <el-table-column label="" width="70">
+                  <template #default="{ row }">
+                    <el-button text style="color:#0ea5e9" size="small"
+                      @click="$router.push(`/psychology/student/${row.student_id}`)">
+                      档案
+                    </el-button>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </div>
           </div>
         </el-col>
       </el-row>
@@ -140,14 +146,16 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import * as echarts from 'echarts'
-import { Back } from '@element-plus/icons-vue'
+import { Back, FullScreen } from '@element-plus/icons-vue'
 
 import { getDashboardAll, type DashboardAll } from '@/api/dashboard'
 
 const data = ref<DashboardAll | null>(null)
 const now = ref('')
+const rootRef = ref<HTMLDivElement>()
+const isFullscreen = ref(false)
 let timer: any
 let refreshTimer: any
 
@@ -202,6 +210,7 @@ function tickClock() {
 
 async function load() {
   data.value = await getDashboardAll()
+  await nextTick()
   render()
 }
 
@@ -217,7 +226,6 @@ function darkAxis() {
 
 function render() {
   if (!data.value) return
-  // 预警等级饼图
   if (pie1Ref.value) {
     pie1?.dispose()
     pie1 = echarts.init(pie1Ref.value, 'dark')
@@ -229,6 +237,7 @@ function render() {
       series: [{
         type: 'pie',
         radius: ['40%', '70%'],
+        center: ['50%', '45%'],
         data: [
           { name: '紧急', value: map.red || 0, itemStyle: { color: '#ef4444' } },
           { name: '重点', value: map.orange || 0, itemStyle: { color: '#f97316' } },
@@ -240,7 +249,6 @@ function render() {
     })
   }
 
-  // 班级活力柱图
   if (bar1Ref.value) {
     bar1?.dispose()
     bar1 = echarts.init(bar1Ref.value, 'dark')
@@ -248,7 +256,7 @@ function render() {
     bar1.setOption({
       backgroundColor: 'transparent',
       tooltip: { trigger: 'axis' },
-      grid: { left: 80, right: 16, top: 16, bottom: 24 },
+      grid: { left: 80, right: 30, top: 10, bottom: 10, containLabel: true },
       xAxis: { type: 'value', min: 0, max: 100, ...darkAxis() },
       yAxis: {
         type: 'category',
@@ -267,7 +275,6 @@ function render() {
     })
   }
 
-  // 30 天曲线
   if (lineRef.value) {
     line?.dispose()
     line = echarts.init(lineRef.value, 'dark')
@@ -275,7 +282,7 @@ function render() {
     line.setOption({
       backgroundColor: 'transparent',
       tooltip: { trigger: 'axis' },
-      grid: { left: 40, right: 16, top: 24, bottom: 30 },
+      grid: { left: 16, right: 16, top: 16, bottom: 8, containLabel: true },
       xAxis: { type: 'category', data: tl.map((p) => p.date), ...darkAxis() },
       yAxis: { type: 'value', min: 0, max: 100, ...darkAxis() },
       series: [{
@@ -294,7 +301,6 @@ function render() {
     })
   }
 
-  // 今日行为
   if (pie2Ref.value) {
     pie2?.dispose()
     pie2 = echarts.init(pie2Ref.value, 'dark')
@@ -305,6 +311,7 @@ function render() {
       series: [{
         type: 'pie',
         radius: ['40%', '70%'],
+        center: ['50%', '45%'],
         data: data.value.behavior_today.items.map((d, i) => ({
           ...d,
           itemStyle: { color: COLORS[i % COLORS.length] },
@@ -314,7 +321,6 @@ function render() {
     })
   }
 
-  // 今日情绪玫瑰
   if (rose1Ref.value) {
     rose1?.dispose()
     rose1 = echarts.init(rose1Ref.value, 'dark')
@@ -324,7 +330,8 @@ function render() {
       legend: { bottom: 0, textStyle: { color: '#94a3b8' }, type: 'scroll' },
       series: [{
         type: 'pie',
-        radius: [20, 90],
+        radius: [20, 80],
+        center: ['50%', '45%'],
         roseType: 'area',
         data: data.value.emotion_today.items.map((d, i) => ({
           ...d,
@@ -340,12 +347,30 @@ const onResize = () => {
   pie1?.resize(); bar1?.resize(); line?.resize(); pie2?.resize(); rose1?.resize()
 }
 
+async function toggleFullscreen() {
+  try {
+    if (!document.fullscreenElement) {
+      await rootRef.value?.requestFullscreen()
+    } else {
+      await document.exitFullscreen()
+    }
+  } catch (e) {
+    // ignore
+  }
+}
+
+function onFsChange() {
+  isFullscreen.value = !!document.fullscreenElement
+  setTimeout(onResize, 200)
+}
+
 onMounted(() => {
   tickClock()
   timer = setInterval(tickClock, 1000)
   load()
   refreshTimer = setInterval(load, 15000)
   window.addEventListener('resize', onResize)
+  document.addEventListener('fullscreenchange', onFsChange)
 })
 
 onBeforeUnmount(() => {
@@ -353,6 +378,10 @@ onBeforeUnmount(() => {
   clearInterval(refreshTimer)
   pie1?.dispose(); bar1?.dispose(); line?.dispose(); pie2?.dispose(); rose1?.dispose()
   window.removeEventListener('resize', onResize)
+  document.removeEventListener('fullscreenchange', onFsChange)
+  if (document.fullscreenElement) {
+    document.exitFullscreen().catch(() => {})
+  }
 })
 </script>
 
@@ -362,9 +391,11 @@ onBeforeUnmount(() => {
   inset: 0;
   background: radial-gradient(ellipse at top, #0b1224 0%, #020617 70%);
   color: #cbd5e1;
-  overflow-y: auto;
   z-index: 9999;
   font-family: -apple-system, "PingFang SC", sans-serif;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 
   &::before {
     content: '';
@@ -375,23 +406,27 @@ onBeforeUnmount(() => {
       linear-gradient(90deg, rgba(14, 165, 233, 0.06) 1px, transparent 1px);
     background-size: 56px 56px;
     pointer-events: none;
+    z-index: 0;
   }
 }
 
 .topbar {
   position: relative;
+  z-index: 1;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 32px;
+  padding: 10px 24px;
   border-bottom: 1px solid rgba(14, 165, 233, 0.15);
+  height: 52px;
   .left, .right {
     flex: 1;
     display: flex;
     align-items: center;
     gap: 12px;
     color: #94a3b8;
-    font-size: 14px;
+    font-size: 13px;
   }
   .right {
     justify-content: flex-end;
@@ -405,13 +440,13 @@ onBeforeUnmount(() => {
     animation: pulse 1.5s infinite;
   }
   .title {
-    font-size: 28px;
+    font-size: 24px;
     font-weight: 800;
     background: linear-gradient(90deg, #22d3ee, #a78bfa, #22c55e);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
-    letter-spacing: 6px;
+    letter-spacing: 4px;
     text-align: center;
     flex: 2;
   }
@@ -424,17 +459,45 @@ onBeforeUnmount(() => {
 
 .grid {
   position: relative;
-  padding: 16px 24px 24px;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px 16px;
+  min-height: 0;
 }
 
 .stat-row {
-  margin-bottom: 16px;
+  flex-shrink: 0;
+}
+
+.main-row {
+  flex: 1.2;
+  min-height: 0;
+}
+
+.bottom-row {
+  flex: 1;
+  min-height: 0;
+}
+
+.main-row .el-col,
+.bottom-row .el-col {
+  height: 100%;
+}
+
+.col-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
 }
 
 .stat-card {
   border: 1px solid rgba(14, 165, 233, 0.2);
   border-radius: 8px;
-  padding: 12px 8px;
+  padding: 8px 6px;
   text-align: center;
   background: linear-gradient(180deg, rgba(14, 165, 233, 0.06), rgba(14, 165, 233, 0.01));
   .label {
@@ -442,38 +505,39 @@ onBeforeUnmount(() => {
     font-size: 12px;
   }
   .value {
-    margin-top: 6px;
+    margin-top: 4px;
     .num {
-      font-size: 26px;
+      font-size: 22px;
       font-weight: 800;
       letter-spacing: 1px;
     }
     .unit {
-      font-size: 12px;
+      font-size: 11px;
       color: #94a3b8;
       margin-left: 4px;
     }
   }
 }
 
-.main-row {
-  margin-bottom: 16px;
-}
-
 .panel {
   position: relative;
   background: rgba(14, 165, 233, 0.04);
   border: 1px solid rgba(14, 165, 233, 0.2);
-  border-radius: 10px;
-  padding: 12px;
-  margin-bottom: 16px;
+  border-radius: 8px;
+  padding: 8px 12px 10px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  &.grow {
+    flex: 1;
+  }
   &::before {
     content: '';
     position: absolute;
     top: -1px;
     left: -1px;
-    width: 14px;
-    height: 14px;
+    width: 12px;
+    height: 12px;
     border-top: 2px solid #22d3ee;
     border-left: 2px solid #22d3ee;
   }
@@ -482,36 +546,40 @@ onBeforeUnmount(() => {
     position: absolute;
     bottom: -1px;
     right: -1px;
-    width: 14px;
-    height: 14px;
+    width: 12px;
+    height: 12px;
     border-bottom: 2px solid #22d3ee;
     border-right: 2px solid #22d3ee;
   }
 }
 
 .panel-title {
+  flex-shrink: 0;
   color: #f1f5f9;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   letter-spacing: 1px;
-  padding-bottom: 8px;
-  margin-bottom: 6px;
+  padding-bottom: 6px;
+  margin-bottom: 4px;
   border-bottom: 1px dashed rgba(14, 165, 233, 0.2);
 }
 
 .chart {
   width: 100%;
-  height: 240px;
-  &.big {
-    height: 280px;
+  &.fill {
+    flex: 1;
+    min-height: 0;
   }
 }
 
 .panel.hero {
+  flex: 0 0 auto;
   text-align: center;
-  padding: 24px 12px;
+  padding: 12px;
   position: relative;
   overflow: hidden;
+  height: 36%;
+  min-height: 160px;
   .hero-bg {
     position: absolute;
     inset: -10%;
@@ -520,9 +588,14 @@ onBeforeUnmount(() => {
   }
   .hero-content {
     position: relative;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
   }
   .hero-num {
-    font-size: 88px;
+    font-size: 72px;
     font-weight: 900;
     letter-spacing: 4px;
     line-height: 1;
@@ -532,7 +605,7 @@ onBeforeUnmount(() => {
     margin-top: 8px;
     color: #94a3b8;
     letter-spacing: 4px;
-    font-size: 16px;
+    font-size: 14px;
   }
   .hero-trend {
     margin-top: 4px;
@@ -549,9 +622,13 @@ onBeforeUnmount(() => {
 .alert-stream {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  max-height: 280px;
+  gap: 6px;
   overflow-y: auto;
+  padding-right: 4px;
+  &.fill {
+    flex: 1;
+    min-height: 0;
+  }
   .alert-item {
     display: flex;
     align-items: center;
@@ -560,6 +637,7 @@ onBeforeUnmount(() => {
     background: rgba(255, 255, 255, 0.02);
     border-radius: 4px;
     border-left: 3px solid #0ea5e9;
+    flex-shrink: 0;
     .time {
       color: #64748b;
       font-size: 12px;
@@ -584,12 +662,47 @@ onBeforeUnmount(() => {
   }
 }
 
+.table-wrap {
+  &.fill {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+  :deep(.el-table) {
+    height: 100% !important;
+    background: transparent !important;
+  }
+  :deep(.el-table__inner-wrapper) {
+    height: 100%;
+  }
+  :deep(.el-table__body-wrapper) {
+    background: transparent !important;
+  }
+  :deep(.el-table tr),
+  :deep(.el-table__row) {
+    background: transparent !important;
+  }
+  :deep(.el-table--striped .el-table__row.el-table__row--striped td.el-table__cell) {
+    background: rgba(14, 165, 233, 0.04) !important;
+  }
+  :deep(.el-table::before),
+  :deep(.el-table::after) {
+    display: none;
+  }
+}
+
 .footer {
   position: relative;
+  z-index: 1;
+  flex-shrink: 0;
   text-align: center;
   color: #64748b;
-  font-size: 12px;
-  padding: 12px 0 16px;
+  font-size: 11px;
+  padding: 6px 0 8px;
   letter-spacing: 4px;
+}
+
+.dashboard.fullscreen {
+  // 浏览器原生全屏时由 :fullscreen 伪类生效，下面规则已覆盖
 }
 </style>
