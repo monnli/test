@@ -1,27 +1,110 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
+import { useUserStore } from '@/stores/user'
+
+const MainLayout = () => import('@/layouts/MainLayout.vue')
+
+const placeholder = (title: string) => ({
+  template: `<div class="placeholder-page"><h2>${title}</h2><p>该模块将于后续里程碑实现。</p></div>`,
+})
 
 const routes: RouteRecordRaw[] = [
-  {
-    path: '/',
-    redirect: '/login',
-  },
+  { path: '/', redirect: '/workbench' },
   {
     path: '/login',
     name: 'Login',
     component: () => import('@/views/login/Index.vue'),
-    meta: { title: '登录 · 青苗守护者' },
+    meta: { title: '登录 · 青苗守护者', anonymous: true },
   },
   {
-    path: '/home',
-    name: 'Home',
-    component: () => import('@/views/Home.vue'),
-    meta: { title: '首页 · 青苗守护者' },
+    path: '/',
+    component: MainLayout,
+    redirect: '/workbench',
+    children: [
+      {
+        path: 'workbench',
+        name: 'Workbench',
+        component: () => import('@/views/workbench/Index.vue'),
+        meta: { title: '工作台' },
+      },
+      {
+        path: 'profile',
+        name: 'Profile',
+        component: () => import('@/views/profile/Index.vue'),
+        meta: { title: '个人中心' },
+      },
+      // 组织架构
+      {
+        path: 'org',
+        meta: { title: '组织架构' },
+        children: [
+          {
+            path: 'schools',
+            component: () => import('@/views/org/Schools.vue'),
+            meta: { title: '学校管理', requiresAdmin: true },
+          },
+          {
+            path: 'grades',
+            component: () => import('@/views/org/Grades.vue'),
+            meta: { title: '年级管理' },
+          },
+          {
+            path: 'classes',
+            component: () => import('@/views/org/Classes.vue'),
+            meta: { title: '班级管理' },
+          },
+          {
+            path: 'students',
+            component: () => import('@/views/org/Students.vue'),
+            meta: { title: '学生管理' },
+          },
+          {
+            path: 'teachers',
+            component: () => import('@/views/org/Teachers.vue'),
+            meta: { title: '教师管理', requiresAdmin: true },
+          },
+          {
+            path: 'subjects',
+            component: () => import('@/views/org/Subjects.vue'),
+            meta: { title: '科目管理', requiresAdmin: true },
+          },
+          {
+            path: 'teaching',
+            component: () => import('@/views/org/Teaching.vue'),
+            meta: { title: '任课关系', requiresAdmin: true },
+          },
+        ],
+      },
+      // 系统管理
+      {
+        path: 'system',
+        meta: { title: '系统管理', requiresAdmin: true },
+        children: [
+          {
+            path: 'users',
+            component: () => import('@/views/system/Users.vue'),
+            meta: { title: '用户管理', requiresAdmin: true },
+          },
+          {
+            path: 'roles',
+            component: () => import('@/views/system/Roles.vue'),
+            meta: { title: '角色权限', requiresAdmin: true },
+          },
+        ],
+      },
+      // 后续里程碑占位
+      { path: 'dashboard', component: placeholder('数据大屏（M6）'), meta: { title: '数据大屏' } },
+      { path: 'classroom', component: placeholder('课堂分析（M3）'), meta: { title: '课堂分析' } },
+      { path: 'psychology', component: placeholder('心理健康（M4）'), meta: { title: '心理健康' } },
+      { path: 'correlation', component: placeholder('关联分析（M5）'), meta: { title: '关联分析' } },
+      { path: 'alerts', component: placeholder('预警中心（M5）'), meta: { title: '预警中心' } },
+      { path: 'reports', component: placeholder('报告中心（M7）'), meta: { title: '报告中心' } },
+    ],
   },
   {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
     component: () => import('@/views/NotFound.vue'),
-    meta: { title: '页面不存在' },
+    meta: { title: '页面不存在', anonymous: true },
   },
 ]
 
@@ -30,10 +113,37 @@ const router = createRouter({
   routes,
 })
 
-router.beforeEach((to, _from, next) => {
+router.beforeEach(async (to, _from, next) => {
   if (to.meta?.title) {
-    document.title = String(to.meta.title)
+    document.title = `${to.meta.title} · 青苗守护者`
   }
+
+  if (to.meta?.anonymous) {
+    next()
+    return
+  }
+
+  const userStore = useUserStore()
+  if (!userStore.accessToken) {
+    next({ path: '/login', query: { redirect: to.fullPath } })
+    return
+  }
+
+  if (!userStore.userInfo) {
+    try {
+      await userStore.fetchMe()
+    } catch (_) {
+      await userStore.logout()
+      next({ path: '/login' })
+      return
+    }
+  }
+
+  if (to.meta?.requiresAdmin && !userStore.isAdmin) {
+    next({ path: '/workbench' })
+    return
+  }
+
   next()
 })
 

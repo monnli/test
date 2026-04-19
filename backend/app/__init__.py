@@ -57,6 +57,12 @@ def _register_blueprints(app: Flask) -> None:
 
 
 def _register_error_handlers(app: Flask) -> None:
+    from .utils.exceptions import APIError
+
+    @app.errorhandler(APIError)
+    def _api_error(err: APIError):
+        return jsonify(code=err.code, message=err.message, data=None), err.status
+
     @app.errorhandler(404)
     def _not_found(_err):
         return jsonify(code=404, message="资源不存在"), 404
@@ -71,6 +77,22 @@ def _register_error_handlers(app: Flask) -> None:
         return jsonify(code=500, message="服务器内部错误"), 500
 
 
+def _register_jwt_handlers(app: Flask) -> None:
+    from .extensions import jwt as jwt_ext
+
+    @jwt_ext.unauthorized_loader
+    def _unauthorized(reason: str):
+        return jsonify(code=401, message=f"未提供认证令牌：{reason}", data=None), 401
+
+    @jwt_ext.invalid_token_loader
+    def _invalid_token(reason: str):
+        return jsonify(code=401, message=f"令牌无效：{reason}", data=None), 401
+
+    @jwt_ext.expired_token_loader
+    def _expired_token(_jwt_header, _jwt_payload):
+        return jsonify(code=401, message="令牌已过期", data=None), 401
+
+
 def create_app(config_class: type[BaseConfig] | None = None) -> Flask:
     """创建 Flask 应用实例。"""
     app = Flask(__name__)
@@ -78,7 +100,11 @@ def create_app(config_class: type[BaseConfig] | None = None) -> Flask:
 
     _configure_logging(app)
     _register_extensions(app)
+    # 加载所有模型，让 SQLAlchemy 与 Migrate 能感知到
+    from . import models  # noqa: F401
+
     _register_blueprints(app)
+    _register_jwt_handlers(app)
     _register_error_handlers(app)
 
     @app.route("/")

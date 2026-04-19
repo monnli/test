@@ -34,12 +34,7 @@
         @submit.prevent="onSubmit"
       >
         <el-form-item label="账号" prop="username">
-          <el-input
-            v-model="formData.username"
-            placeholder="请输入账号"
-            :prefix-icon="User"
-            clearable
-          />
+          <el-input v-model="formData.username" placeholder="请输入账号" :prefix-icon="User" clearable />
         </el-form-item>
         <el-form-item label="密码" prop="password">
           <el-input
@@ -48,28 +43,27 @@
             show-password
             placeholder="请输入密码"
             :prefix-icon="Lock"
+            @keyup.enter="onSubmit"
           />
         </el-form-item>
-        <el-button
-          type="primary"
-          class="submit-btn"
-          :loading="loading"
-          @click="onSubmit"
-        >
+        <el-button type="primary" class="submit-btn" :loading="loading" @click="onSubmit">
           登 录
         </el-button>
       </el-form>
 
-      <el-divider>系统状态</el-divider>
+      <el-divider><span class="divider-text">演示账号（点击自动填充）</span></el-divider>
 
-      <div class="health-block">
-        <el-tag :type="healthTagType" effect="dark" round>
-          {{ healthLabel }}
+      <div class="demo-accounts">
+        <el-tag
+          v-for="acc in demoAccounts"
+          :key="acc.username"
+          class="demo-tag"
+          :type="acc.color as any"
+          effect="plain"
+          @click="fillAccount(acc)"
+        >
+          {{ acc.label }}
         </el-tag>
-        <el-button text type="primary" :loading="checking" @click="checkHealth">
-          <el-icon><Refresh /></el-icon>
-          重新检测
-        </el-button>
       </div>
 
       <div class="footer">
@@ -80,19 +74,19 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { reactive, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
-import { Lock, Refresh, User } from '@element-plus/icons-vue'
+import { Lock, User } from '@element-plus/icons-vue'
 
-import { getHealth } from '@/api/system'
+import { useUserStore } from '@/stores/user'
 
 const router = useRouter()
+const route = useRoute()
+const userStore = useUserStore()
+
 const formRef = ref<FormInstance>()
 const loading = ref(false)
-const checking = ref(false)
-const healthLabel = ref('未检测')
-const healthTagType = ref<'success' | 'danger' | 'info' | 'warning'>('info')
 
 const formData = reactive({
   username: '',
@@ -104,42 +98,41 @@ const rules: FormRules = {
   password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
 }
 
+interface DemoAccount {
+  label: string
+  username: string
+  password: string
+  color: 'success' | 'info' | 'warning' | 'primary' | 'danger'
+}
+
+const demoAccounts: DemoAccount[] = [
+  { label: '学校管理员', username: 'admin', password: 'admin123', color: 'danger' },
+  { label: '心理学老师', username: 'psy', password: 'psy12345', color: 'warning' },
+  { label: '年级组长（七）', username: 'grade_head_7', password: 'grade123', color: 'success' },
+  { label: '班主任（七1班）', username: 'head_7_1b', password: 'head1234', color: 'info' },
+  { label: '科任老师（物理）', username: 'sub_physics', password: 'sub12345', color: 'primary' },
+]
+
+function fillAccount(acc: DemoAccount) {
+  formData.username = acc.username
+  formData.password = acc.password
+}
+
 async function onSubmit() {
   if (!formRef.value) return
   await formRef.value.validate(async (valid) => {
     if (!valid) return
     loading.value = true
     try {
-      // M0 阶段：登录接口尚未实现，模拟成功后跳转首页
-      ElMessage.success('M0 阶段：用户系统将在 M1 中实现，先跳转到首页演示')
-      localStorage.setItem('access_token', 'demo-token')
-      router.push('/home')
+      await userStore.login(formData.username, formData.password)
+      ElMessage.success(`欢迎回来，${userStore.userInfo?.real_name || ''}`)
+      const redirect = (route.query.redirect as string) || '/workbench'
+      router.push(redirect)
     } finally {
       loading.value = false
     }
   })
 }
-
-async function checkHealth() {
-  checking.value = true
-  try {
-    const data = await getHealth()
-    if (data?.status === 'healthy') {
-      healthLabel.value = `后端服务正常 · ${data.service}`
-      healthTagType.value = 'success'
-    } else {
-      healthLabel.value = '后端服务异常'
-      healthTagType.value = 'danger'
-    }
-  } catch {
-    healthLabel.value = '后端连接失败'
-    healthTagType.value = 'danger'
-  } finally {
-    checking.value = false
-  }
-}
-
-onMounted(checkHealth)
 </script>
 
 <style lang="scss" scoped>
@@ -166,7 +159,7 @@ onMounted(checkHealth)
 
 .login-card {
   position: relative;
-  width: 420px;
+  width: 440px;
   padding: 40px 36px 28px;
   background: rgba(255, 255, 255, 0.96);
   border-radius: 16px;
@@ -197,13 +190,6 @@ onMounted(checkHealth)
   line-height: 1.4;
 }
 
-.login-form {
-  :deep(.el-form-item__label) {
-    color: #334155;
-    font-weight: 500;
-  }
-}
-
 .submit-btn {
   width: 100%;
   height: 44px;
@@ -214,11 +200,24 @@ onMounted(checkHealth)
   margin-top: 6px;
 }
 
-.health-block {
+.divider-text {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.demo-accounts {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 4px 0;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.demo-tag {
+  cursor: pointer;
+  user-select: none;
+  &:hover {
+    transform: translateY(-1px);
+  }
 }
 
 .footer {

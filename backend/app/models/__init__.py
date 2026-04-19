@@ -1,1 +1,55 @@
-"""SQLAlchemy 数据模型集合。M1 起逐步添加。"""
+"""SQLAlchemy 数据模型集合。"""
+
+from .auth import (
+    OperationLog,
+    Permission,
+    ROLE_GRADE_HEAD,
+    ROLE_HEAD_TEACHER,
+    ROLE_LABELS,
+    ROLE_PSY_TEACHER,
+    ROLE_SCHOOL_ADMIN,
+    ROLE_SUBJECT_TEACHER,
+    ROLE_SUPER_ADMIN,
+    Role,
+    RolePermission,
+    User,
+    UserRole,
+)
+from .base import BaseModel, SoftDeleteMixin, TimestampMixin
+from .organization import (
+    Clazz,
+    Grade,
+    GradeHead,
+    School,
+    Student,
+    Subject,
+    Teacher,
+    TeacherClassSubject,
+)
+
+__all__ = [
+    "BaseModel",
+    "SoftDeleteMixin",
+    "TimestampMixin",
+    "School",
+    "Grade",
+    "Clazz",
+    "Student",
+    "Subject",
+    "Teacher",
+    "TeacherClassSubject",
+    "GradeHead",
+    "User",
+    "Role",
+    "Permission",
+    "RolePermission",
+    "UserRole",
+    "OperationLog",
+    "ROLE_SUPER_ADMIN",
+    "ROLE_SCHOOL_ADMIN",
+    "ROLE_PSY_TEACHER",
+    "ROLE_GRADE_HEAD",
+    "ROLE_HEAD_TEACHER",
+    "ROLE_SUBJECT_TEACHER",
+    "ROLE_LABELS",
+]
