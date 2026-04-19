@@ -79,7 +79,7 @@ ai_service/models/*.safetensors
 ai_service/models/weights/
 ai_service/models/cache/
 
-# ============ MinIO / Uploads ============
+# ============ 文件存储（本地）/ Uploads ============
 data/
 uploads/
 storage/

@@ -69,17 +69,11 @@ class BaseConfig:
         "max_overflow": 20,
     }
 
-    # Redis
-    REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
-    REDIS_PORT = _get_int("REDIS_PORT", 6379)
-    REDIS_PASSWORD = os.getenv("REDIS_PASSWORD", "") or None
-    REDIS_DB = _get_int("REDIS_DB", 0)
+    # 文件存储
+    STORAGE_BACKEND = os.getenv("STORAGE_BACKEND", "local").lower()  # local | minio
+    LOCAL_STORAGE_DIR = Path(os.getenv("LOCAL_STORAGE_DIR", PROJECT_ROOT / "storage"))
 
-    # Celery
-    CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "redis://localhost:6379/1")
-    CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", "redis://localhost:6379/2")
-
-    # MinIO
+    # MinIO（仅当 STORAGE_BACKEND=minio 时使用）
     MINIO_ENDPOINT = os.getenv("MINIO_ENDPOINT", "localhost:9000")
     MINIO_ACCESS_KEY = os.getenv("MINIO_ACCESS_KEY", "minioadmin")
     MINIO_SECRET_KEY = os.getenv("MINIO_SECRET_KEY", "minioadmin123")

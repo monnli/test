@@ -161,7 +161,7 @@ const stats = [
 ]
 
 const roadmap = [
-  { code: 'M0', title: '基础设施', desc: '骨架 + Docker', type: 'success' as const },
+  { code: 'M0', title: '基础设施', desc: '前后端 + AI 服务骨架', type: 'success' as const },
   { code: 'M1', title: '用户与权限', desc: '5 级 RBAC + 组织架构', type: 'primary' as const },
   { code: 'M2', title: 'AI 推理服务', desc: '人脸/行为/表情', type: 'info' as const },
   { code: 'M3', title: '课堂视频分析', desc: '上传 + 实时', type: 'info' as const },

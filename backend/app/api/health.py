@@ -29,7 +29,7 @@ def health():
 
 @health_bp.get("/deep")
 def deep_health():
-    """深度健康检查：探测所有依赖（DB / Redis / MinIO / AI）。"""
+    """深度健康检查：探测所有依赖（DB / 存储 / AI）。"""
     results: dict[str, dict] = {}
 
     # MySQL
@@ -39,36 +39,33 @@ def deep_health():
     except Exception as exc:  # noqa: BLE001
         results["mysql"] = {"status": "error", "detail": str(exc)}
 
-    # Redis
-    try:
-        import redis
+    # 文件存储
+    storage_backend = current_app.config.get("STORAGE_BACKEND", "local")
+    if storage_backend == "minio":
+        try:
+            from minio import Minio
 
-        r = redis.Redis(
-            host=current_app.config["REDIS_HOST"],
-            port=current_app.config["REDIS_PORT"],
-            password=current_app.config["REDIS_PASSWORD"],
-            db=current_app.config["REDIS_DB"],
-            socket_connect_timeout=2,
-        )
-        r.ping()
-        results["redis"] = {"status": "ok"}
-    except Exception as exc:  # noqa: BLE001
-        results["redis"] = {"status": "error", "detail": str(exc)}
-
-    # MinIO
-    try:
-        from minio import Minio
-
-        client = Minio(
-            current_app.config["MINIO_ENDPOINT"],
-            access_key=current_app.config["MINIO_ACCESS_KEY"],
-            secret_key=current_app.config["MINIO_SECRET_KEY"],
-            secure=current_app.config["MINIO_SECURE"],
-        )
-        list(client.list_buckets())
-        results["minio"] = {"status": "ok"}
-    except Exception as exc:  # noqa: BLE001
-        results["minio"] = {"status": "error", "detail": str(exc)}
+            client = Minio(
+                current_app.config["MINIO_ENDPOINT"],
+                access_key=current_app.config["MINIO_ACCESS_KEY"],
+                secret_key=current_app.config["MINIO_SECRET_KEY"],
+                secure=current_app.config["MINIO_SECURE"],
+            )
+            list(client.list_buckets())
+            results["storage"] = {"status": "ok", "backend": "minio"}
+        except Exception as exc:  # noqa: BLE001
+            results["storage"] = {"status": "error", "backend": "minio", "detail": str(exc)}
+    else:
+        try:
+            local_dir = current_app.config["LOCAL_STORAGE_DIR"]
+            local_dir.mkdir(parents=True, exist_ok=True)
+            results["storage"] = {
+                "status": "ok",
+                "backend": "local",
+                "path": str(local_dir),
+            }
+        except Exception as exc:  # noqa: BLE001
+            results["storage"] = {"status": "error", "backend": "local", "detail": str(exc)}
 
     # AI 服务
     try:
