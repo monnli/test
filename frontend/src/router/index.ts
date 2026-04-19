@@ -144,8 +144,11 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/views/alerts/Index.vue'),
         meta: { title: '预警中心' },
       },
-      // 后续里程碑占位
-      { path: 'reports', component: placeholder('报告中心（M7）'), meta: { title: '报告中心' } },
+      {
+        path: 'reports',
+        component: () => import('@/views/reports/Index.vue'),
+        meta: { title: '报告中心' },
+      },
     ],
   },
   {
