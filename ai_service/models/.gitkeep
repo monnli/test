@@ -1,0 +1,2 @@
+# 此目录用于存放模型权重，体积较大，已加入 .gitignore，仅保留 .gitkeep。
+# M2 阶段的下载脚本：scripts/download_models.py

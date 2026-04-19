@@ -1,0 +1,26 @@
+FROM python:3.10-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    TZ=Asia/Shanghai
+
+WORKDIR /app
+
+# 系统依赖（MySQL 客户端、构建工具）
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        build-essential \
+        default-libmysqlclient-dev \
+        pkg-config \
+        curl \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY backend/requirements.txt ./requirements.txt
+RUN pip install --index-url https://pypi.tuna.tsinghua.edu.cn/simple \
+                -r requirements.txt
+
+COPY backend/ ./
+
+EXPOSE 5000
+CMD ["python", "run.py"]

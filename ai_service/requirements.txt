@@ -1,0 +1,30 @@
+# ===== Web 框架 =====
+fastapi==0.111.1
+uvicorn[standard]==0.30.1
+python-multipart==0.0.9
+pydantic==2.8.2
+pydantic-settings==2.3.4
+
+# ===== 工具 =====
+python-dotenv==1.0.1
+loguru==0.7.2
+httpx==0.27.0
+numpy==1.26.4
+Pillow==10.4.0
+
+# ===== 计算机视觉（M2 起需要的依赖；M0 基础骨架可不安装这些重型包）=====
+# 如要在 M0 阶段就装上，请取消注释；推荐 M2 再统一安装。
+# opencv-python-headless==4.10.0.84
+# torch==2.3.1
+# torchvision==0.18.1
+# ultralytics==8.2.79          # YOLOv8
+# insightface==0.7.3           # 人脸识别
+# onnxruntime==1.18.1          # 推理
+# onnxruntime-gpu==1.18.1      # GPU 版（开发机用）
+# mediapipe==0.10.14
+# hsemotion==0.3               # 表情识别
+# scipy==1.13.1
+# scikit-learn==1.5.1
+
+# ===== 通义千问 =====
+dashscope==1.20.3
