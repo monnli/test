@@ -101,11 +101,17 @@ bash scripts/start_all.sh
 - **数据大屏**：http://localhost:5173/dashboard
 - **工作台**：http://localhost:5173/workbench
 
-### Windows 用户
+### Windows 用户（无需 WSL，纯原生）
 
 ```cmd
+REM 1. 一键初始化数据库 + 演示数据
+scripts\init_demo.bat
+
+REM 2. 一键启动所有服务
 scripts\start_all.bat
 ```
+
+> Windows 上不要用 `bash scripts/init_demo.sh`，那是 Linux/macOS 脚本。
 
 ### 手动启动
 
