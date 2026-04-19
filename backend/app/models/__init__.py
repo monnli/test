@@ -25,6 +25,7 @@ from .classroom import (
     Video,
 )
 from .face import FaceEmbedding
+from .alert import Alert, Exam, InterventionRecord, Score
 from .psychology import (
     AIConversation,
     AIConversationMessage,
@@ -77,6 +78,10 @@ __all__ = [
     "AIConversation",
     "AIConversationMessage",
     "EmotionTimeline",
+    "Exam",
+    "Score",
+    "Alert",
+    "InterventionRecord",
     "ROLE_SUPER_ADMIN",
     "ROLE_SCHOOL_ADMIN",
     "ROLE_PSY_TEACHER",

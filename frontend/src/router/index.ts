@@ -126,10 +126,20 @@ const routes: RouteRecordRaw[] = [
           },
         ],
       },
+      // 关联分析
+      {
+        path: 'correlation',
+        component: () => import('@/views/correlation/Index.vue'),
+        meta: { title: '关联分析' },
+      },
+      // 预警中心
+      {
+        path: 'alerts',
+        component: () => import('@/views/alerts/Index.vue'),
+        meta: { title: '预警中心' },
+      },
       // 后续里程碑占位
       { path: 'dashboard', component: placeholder('数据大屏（M6）'), meta: { title: '数据大屏' } },
-      { path: 'correlation', component: placeholder('关联分析（M5）'), meta: { title: '关联分析' } },
-      { path: 'alerts', component: placeholder('预警中心（M5）'), meta: { title: '预警中心' } },
       { path: 'reports', component: placeholder('报告中心（M7）'), meta: { title: '报告中心' } },
     ],
   },
