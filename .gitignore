@@ -80,9 +80,9 @@ ai_service/models/weights/
 ai_service/models/cache/
 
 # ============ 文件存储（本地）/ Uploads ============
-data/
+/data/
 uploads/
-storage/
+/storage/
 minio_data/
 
 # ============ Migrations 缓存 ============
