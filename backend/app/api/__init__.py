@@ -20,3 +20,7 @@ api_bp.register_blueprint(orgs_bp, url_prefix="/orgs")
 api_bp.register_blueprint(faces_bp, url_prefix="/faces")
 api_bp.register_blueprint(ai_bp, url_prefix="/ai")
 api_bp.register_blueprint(classroom_bp, url_prefix="/classroom")
+
+from .psychology import psy_bp  # noqa: E402
+
+api_bp.register_blueprint(psy_bp, url_prefix="/psychology")

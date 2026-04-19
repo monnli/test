@@ -25,6 +25,15 @@ from .classroom import (
     Video,
 )
 from .face import FaceEmbedding
+from .psychology import (
+    AIConversation,
+    AIConversationMessage,
+    EmotionTimeline,
+    Scale,
+    ScaleAssessment,
+    ScaleQuestion,
+    TextAnalysis,
+)
 from .organization import (
     Clazz,
     Grade,
@@ -61,6 +70,13 @@ __all__ = [
     "BehaviorRecord",
     "EmotionRecord",
     "AttendanceRecord",
+    "Scale",
+    "ScaleQuestion",
+    "ScaleAssessment",
+    "TextAnalysis",
+    "AIConversation",
+    "AIConversationMessage",
+    "EmotionTimeline",
     "ROLE_SUPER_ADMIN",
     "ROLE_SCHOOL_ADMIN",
     "ROLE_PSY_TEACHER",

@@ -113,9 +113,21 @@ const routes: RouteRecordRaw[] = [
           { path: 'task/:taskId', component: () => import('@/views/classroom/TaskDetail.vue'), meta: { title: '分析报告' } },
         ],
       },
+      // 心理健康
+      {
+        path: 'psychology',
+        meta: { title: '心理健康' },
+        children: [
+          { path: '', component: () => import('@/views/psychology/Index.vue'), meta: { title: '量表与档案' } },
+          {
+            path: 'student/:studentId',
+            component: () => import('@/views/psychology/StudentProfile.vue'),
+            meta: { title: '学生心理档案' },
+          },
+        ],
+      },
       // 后续里程碑占位
       { path: 'dashboard', component: placeholder('数据大屏（M6）'), meta: { title: '数据大屏' } },
-      { path: 'psychology', component: placeholder('心理健康（M4）'), meta: { title: '心理健康' } },
       { path: 'correlation', component: placeholder('关联分析（M5）'), meta: { title: '关联分析' } },
       { path: 'alerts', component: placeholder('预警中心（M5）'), meta: { title: '预警中心' } },
       { path: 'reports', component: placeholder('报告中心（M7）'), meta: { title: '报告中心' } },
