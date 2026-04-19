@@ -1,1 +1,5 @@
-"""AI 推理客户端封装层。负责调用 ai_service 微服务和通义千问 API。"""
+"""AI 推理客户端封装层。"""
+
+from .client import AIClient, get_ai_client
+
+__all__ = ["AIClient", "get_ai_client"]

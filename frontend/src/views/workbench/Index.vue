@@ -82,15 +82,15 @@
               v-for="item in roadmap"
               :key="item.code"
               :type="item.type"
-              :hollow="item.code !== 'M1'"
+              :hollow="item.type === 'info'"
               :timestamp="item.code"
             >
               <div class="roadmap-item">
                 <span class="roadmap-title">{{ item.title }}</span>
-                <el-tag v-if="item.code === 'M1'" size="small" type="success" effect="dark">
+                <el-tag v-if="item.type === 'primary'" size="small" type="success" effect="dark">
                   当前
                 </el-tag>
-                <el-tag v-else-if="item.code === 'M0'" size="small" type="success">
+                <el-tag v-else-if="item.type === 'success'" size="small" type="success">
                   已完成
                 </el-tag>
               </div>
@@ -162,8 +162,8 @@ const stats = [
 
 const roadmap = [
   { code: 'M0', title: '基础设施', desc: '前后端 + AI 服务骨架', type: 'success' as const },
-  { code: 'M1', title: '用户与权限', desc: '5 级 RBAC + 组织架构', type: 'primary' as const },
-  { code: 'M2', title: 'AI 推理服务', desc: '人脸/行为/表情', type: 'info' as const },
+  { code: 'M1', title: '用户与权限', desc: '5 级 RBAC + 组织架构', type: 'success' as const },
+  { code: 'M2', title: 'AI 推理服务', desc: '人脸/行为/表情/文本', type: 'primary' as const },
   { code: 'M3', title: '课堂视频分析', desc: '上传 + 实时', type: 'info' as const },
   { code: 'M4', title: '心理健康', desc: '量表 + AI 对话', type: 'info' as const },
   { code: 'M5', title: '关联与预警', desc: '多维分析', type: 'info' as const },

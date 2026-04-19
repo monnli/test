@@ -72,6 +72,11 @@ const routes: RouteRecordRaw[] = [
             component: () => import('@/views/org/Teaching.vue'),
             meta: { title: '任课关系', requiresAdmin: true },
           },
+          {
+            path: 'faces',
+            component: () => import('@/views/org/FaceLibrary.vue'),
+            meta: { title: '人脸库管理' },
+          },
         ],
       },
       // 系统管理
@@ -88,6 +93,11 @@ const routes: RouteRecordRaw[] = [
             path: 'roles',
             component: () => import('@/views/system/Roles.vue'),
             meta: { title: '角色权限', requiresAdmin: true },
+          },
+          {
+            path: 'ai',
+            component: () => import('@/views/system/AiMonitor.vue'),
+            meta: { title: 'AI 服务监控' },
           },
         ],
       },

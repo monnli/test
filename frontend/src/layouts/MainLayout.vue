@@ -142,6 +142,7 @@ const menu: MenuItem[] = [
       { path: '/org/teachers', title: '教师管理', icon: User, requiresAdmin: true },
       { path: '/org/subjects', title: '科目管理', icon: Notebook, requiresAdmin: true },
       { path: '/org/teaching', title: '任课关系', icon: Document, requiresAdmin: true },
+      { path: '/org/faces', title: '人脸库管理', icon: Avatar },
     ],
   },
   { path: '/classroom', title: '课堂分析', icon: VideoCamera },
@@ -153,10 +154,10 @@ const menu: MenuItem[] = [
     path: '/system',
     title: '系统管理',
     icon: Setting,
-    requiresAdmin: true,
     children: [
       { path: '/system/users', title: '用户管理', icon: User, requiresAdmin: true },
       { path: '/system/roles', title: '角色权限', icon: Lock, requiresAdmin: true },
+      { path: '/system/ai', title: 'AI 服务监控', icon: Cpu },
     ],
   },
 ]

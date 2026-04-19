@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from flask import Blueprint
 
+from .ai import ai_bp
 from .auth import auth_bp
+from .faces import faces_bp
 from .health import health_bp
 from .orgs import orgs_bp
 from .users import users_bp
@@ -14,3 +16,5 @@ api_bp.register_blueprint(health_bp, url_prefix="/health")
 api_bp.register_blueprint(auth_bp, url_prefix="/auth")
 api_bp.register_blueprint(users_bp, url_prefix="/users")
 api_bp.register_blueprint(orgs_bp, url_prefix="/orgs")
+api_bp.register_blueprint(faces_bp, url_prefix="/faces")
+api_bp.register_blueprint(ai_bp, url_prefix="/ai")

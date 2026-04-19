@@ -1,7 +1,19 @@
-"""AI 流水线集合。M2 起逐步实现。
+"""AI 流水线集合。"""
 
-- behavior_pipeline.py：人体检测 + 行为分类（YOLOv8 + 自定义类别）
-- emotion_pipeline.py：面部表情识别（HSEmotion）
-- face_pipeline.py：人脸检测 + 识别（InsightFace）
-- text_pipeline.py：文本情绪/风险分析（通义千问）
-"""
+from .base import PipelineStatus
+from .behavior_pipeline import CLASSROOM_BEHAVIORS_CN, behavior_pipeline
+from .emotion_pipeline import EMOTION_LABELS_CN, emotion_pipeline
+from .face_pipeline import cosine_similarity, face_pipeline, find_best_match
+from .text_pipeline import text_pipeline
+
+__all__ = [
+    "PipelineStatus",
+    "behavior_pipeline",
+    "emotion_pipeline",
+    "face_pipeline",
+    "text_pipeline",
+    "cosine_similarity",
+    "find_best_match",
+    "CLASSROOM_BEHAVIORS_CN",
+    "EMOTION_LABELS_CN",
+]
