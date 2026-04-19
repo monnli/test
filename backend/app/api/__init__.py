@@ -28,3 +28,7 @@ api_bp.register_blueprint(psy_bp, url_prefix="/psychology")
 from .alerts import alerts_bp  # noqa: E402
 
 api_bp.register_blueprint(alerts_bp, url_prefix="/alerts")
+
+from .dashboard import dashboard_bp  # noqa: E402
+
+api_bp.register_blueprint(dashboard_bp, url_prefix="/dashboard")

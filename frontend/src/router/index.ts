@@ -16,6 +16,12 @@ const routes: RouteRecordRaw[] = [
     meta: { title: '登录 · 青苗守护者', anonymous: true },
   },
   {
+    path: '/dashboard',
+    name: 'Dashboard',
+    component: () => import('@/views/dashboard/Index.vue'),
+    meta: { title: '数据大屏' },
+  },
+  {
     path: '/',
     component: MainLayout,
     redirect: '/workbench',
@@ -139,7 +145,6 @@ const routes: RouteRecordRaw[] = [
         meta: { title: '预警中心' },
       },
       // 后续里程碑占位
-      { path: 'dashboard', component: placeholder('数据大屏（M6）'), meta: { title: '数据大屏' } },
       { path: 'reports', component: placeholder('报告中心（M7）'), meta: { title: '报告中心' } },
     ],
   },
