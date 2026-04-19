@@ -145,7 +145,16 @@ const menu: MenuItem[] = [
       { path: '/org/faces', title: '人脸库管理', icon: Avatar },
     ],
   },
-  { path: '/classroom', title: '课堂分析', icon: VideoCamera },
+  {
+    path: '/classroom',
+    title: '课堂分析',
+    icon: VideoCamera,
+    children: [
+      { path: '/classroom', title: '视频库', icon: VideoCamera },
+      { path: '/classroom/upload', title: '上传视频', icon: VideoCamera },
+      { path: '/classroom/realtime', title: '实时摄像头', icon: VideoCamera },
+    ],
+  },
   { path: '/psychology', title: '心理健康', icon: Histogram },
   { path: '/correlation', title: '关联分析', icon: DataAnalysis },
   { path: '/alerts', title: '预警中心', icon: Bell },

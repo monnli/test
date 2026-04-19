@@ -1,1 +1,3 @@
-"""WebSocket 事件处理集合。M3 起逐步添加。"""
+"""WebSocket 事件处理集合。"""
+
+from . import realtime  # noqa: F401  注册事件

@@ -16,6 +16,14 @@ from .auth import (
     UserRole,
 )
 from .base import BaseModel, SoftDeleteMixin, TimestampMixin
+from .classroom import (
+    AnalysisTask,
+    AttendanceRecord,
+    BehaviorRecord,
+    ClassSession,
+    EmotionRecord,
+    Video,
+)
 from .face import FaceEmbedding
 from .organization import (
     Clazz,
@@ -47,6 +55,12 @@ __all__ = [
     "UserRole",
     "OperationLog",
     "FaceEmbedding",
+    "ClassSession",
+    "Video",
+    "AnalysisTask",
+    "BehaviorRecord",
+    "EmotionRecord",
+    "AttendanceRecord",
     "ROLE_SUPER_ADMIN",
     "ROLE_SCHOOL_ADMIN",
     "ROLE_PSY_TEACHER",

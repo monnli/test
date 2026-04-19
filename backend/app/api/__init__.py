@@ -6,6 +6,7 @@ from flask import Blueprint
 
 from .ai import ai_bp
 from .auth import auth_bp
+from .classroom import classroom_bp
 from .faces import faces_bp
 from .health import health_bp
 from .orgs import orgs_bp
@@ -18,3 +19,4 @@ api_bp.register_blueprint(users_bp, url_prefix="/users")
 api_bp.register_blueprint(orgs_bp, url_prefix="/orgs")
 api_bp.register_blueprint(faces_bp, url_prefix="/faces")
 api_bp.register_blueprint(ai_bp, url_prefix="/ai")
+api_bp.register_blueprint(classroom_bp, url_prefix="/classroom")

@@ -101,9 +101,20 @@ const routes: RouteRecordRaw[] = [
           },
         ],
       },
+      // 课堂分析
+      {
+        path: 'classroom',
+        meta: { title: '课堂分析' },
+        children: [
+          { path: '', component: () => import('@/views/classroom/Videos.vue'), meta: { title: '视频库' } },
+          { path: 'upload', component: () => import('@/views/classroom/Upload.vue'), meta: { title: '上传视频' } },
+          { path: 'realtime', component: () => import('@/views/classroom/Realtime.vue'), meta: { title: '实时摄像头' } },
+          { path: 'video/:videoId', component: () => import('@/views/classroom/VideoTasks.vue'), meta: { title: '视频任务' } },
+          { path: 'task/:taskId', component: () => import('@/views/classroom/TaskDetail.vue'), meta: { title: '分析报告' } },
+        ],
+      },
       // 后续里程碑占位
       { path: 'dashboard', component: placeholder('数据大屏（M6）'), meta: { title: '数据大屏' } },
-      { path: 'classroom', component: placeholder('课堂分析（M3）'), meta: { title: '课堂分析' } },
       { path: 'psychology', component: placeholder('心理健康（M4）'), meta: { title: '心理健康' } },
       { path: 'correlation', component: placeholder('关联分析（M5）'), meta: { title: '关联分析' } },
       { path: 'alerts', component: placeholder('预警中心（M5）'), meta: { title: '预警中心' } },

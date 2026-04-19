@@ -106,6 +106,8 @@ def create_app(config_class: type[BaseConfig] | None = None) -> Flask:
     _register_blueprints(app)
     _register_jwt_handlers(app)
     _register_error_handlers(app)
+    # 注册 WebSocket 事件
+    from . import sockets  # noqa: F401
 
     @app.route("/")
     def index():
