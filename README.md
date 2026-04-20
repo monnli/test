@@ -103,7 +103,7 @@ qingmiao-guardian/
 
 ## 🚀 快速开始
 
-> 假设你已经在本机安装了 MySQL 8.x、Python 3.10+、Node 18+，并激活 conda 环境 `kt_cursor`。
+> 假设你已经在本机安装了 MySQL 8.x、Python 3.10+、Node 18+，并激活 conda 环境 `kt_env`。
 
 ### 一键初始化（推荐）
 
@@ -113,7 +113,7 @@ qingmiao-guardian/
 #    GRANT ALL PRIVILEGES ON *.* TO 'qingmiao'@'localhost';
 
 cp .env.example .env
-conda activate kt_cursor
+conda activate kt_env
 
 cd backend && pip install -r requirements.txt && cd ..
 cd ai_service && pip install -r requirements.txt && cd ..

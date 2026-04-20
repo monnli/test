@@ -27,7 +27,7 @@ env/
 ENV/
 .venv/
 .env/
-kt_cursor/
+kt_env/
 
 # ============ Node ============
 node_modules/
