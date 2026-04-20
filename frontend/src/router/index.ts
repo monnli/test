@@ -149,6 +149,23 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/views/reports/Index.vue'),
         meta: { title: '报告中心' },
       },
+      {
+        path: 'ethics',
+        component: () => import('@/views/ethics/Index.vue'),
+        meta: { title: '负责任 AI' },
+      },
+      {
+        path: 'enhance',
+        meta: { title: 'AI 增强' },
+        children: [
+          { path: 'cluster', component: () => import('@/views/enhance/Cluster.vue'), meta: { title: '群体聚类' } },
+          { path: 'intervention', component: () => import('@/views/enhance/Intervention.vue'), meta: { title: '干预闭环' } },
+          { path: 'graph', component: () => import('@/views/enhance/Graph.vue'), meta: { title: '知识图谱' } },
+          { path: 'multimodal', component: () => import('@/views/enhance/Multimodal.vue'), meta: { title: '多模态融合' } },
+          { path: 'story', component: () => import('@/views/enhance/Story.vue'), meta: { title: '小李的故事' } },
+          { path: 'compare', component: () => import('@/views/enhance/Compare.vue'), meta: { title: '产品对比' } },
+        ],
+      },
     ],
   },
   {

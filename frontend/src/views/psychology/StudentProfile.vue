@@ -26,8 +26,21 @@
     <el-row :gutter="16">
       <el-col :xs="24" :md="14">
         <el-card shadow="never">
-          <template #header><span class="card-title">情绪健康指数趋势（60 天）</span></template>
+          <template #header>
+            <div class="head">
+              <span class="card-title">情绪健康指数趋势 + 7 天 AI 预测</span>
+              <el-tag v-if="forecast?.risk_alert" type="danger" effect="dark" size="small">
+                ⚠ 预测有风险
+              </el-tag>
+            </div>
+          </template>
           <div ref="trendRef" class="chart" />
+          <div v-if="forecast" class="forecast-tip" :class="forecast.trend_color">
+            <strong>{{ forecast.trend_label }}</strong>
+            <span class="meta">
+              · 算法：{{ forecast.method }}
+            </span>
+          </div>
         </el-card>
       </el-col>
       <el-col :xs="24" :md="10">
@@ -126,6 +139,9 @@
       </template>
     </el-dialog>
 
+    <!-- 危机热线弹窗 -->
+    <CrisisHotline ref="crisisRef" />
+
     <!-- AI 对话对话框 -->
     <el-dialog v-model="chatDialogVisible" :title="`AI 心理对话 · ${currentConv?.title || ''}`" width="640px">
       <div class="chat-history" ref="historyRef">
@@ -160,6 +176,8 @@ import {
   type MessageItem,
   type PsychologyProfile,
 } from '@/api/psychology'
+import { getForecast, type ForecastResult } from '@/api/enhance'
+import CrisisHotline from '@/components/CrisisHotline.vue'
 
 const route = useRoute()
 const studentId = computed(() => Number(route.params.studentId))
@@ -178,6 +196,8 @@ const currentConv = ref<ConversationItem | null>(null)
 const messages = ref<MessageItem[]>([])
 const chatInput = ref('')
 const historyRef = ref<HTMLDivElement>()
+const crisisRef = ref<any>()
+const forecast = ref<ForecastResult | null>(null)
 
 function riskTag(r: string): any {
   return { none: 'success', low: 'info', medium: 'warning', high: 'danger' }[r] || 'info'
@@ -201,6 +221,11 @@ async function load() {
   loading.value = true
   try {
     profile.value = await getProfile(studentId.value)
+    try {
+      forecast.value = await getForecast(studentId.value, 7)
+    } catch {
+      forecast.value = null
+    }
     renderTrend()
   } finally {
     loading.value = false
@@ -212,17 +237,33 @@ function renderTrend() {
   chart?.dispose()
   chart = echarts.init(trendRef.value)
   const tl = profile.value.timeline
+  const histDates = tl.map((p) => p.date)
+  const histScores = tl.map((p) => p.score)
+  const fcDates = forecast.value?.forecast.map((p) => p.date) || []
+  const fcScores = forecast.value?.forecast.map((p) => p.score) || []
+  const allDates = [...histDates, ...fcDates]
+  const histAlign = [...histScores, ...new Array(fcScores.length).fill(null)]
+  const fcAlign = [...new Array(histScores.length).fill(null), ...fcScores]
+  // 让历史曲线最后一点和预测连上
+  if (histScores.length && fcScores.length) {
+    fcAlign[histScores.length - 1] = histScores[histScores.length - 1]
+  }
+
   chart.setOption({
     tooltip: { trigger: 'axis' },
-    grid: { left: 40, right: 16, top: 30, bottom: 30 },
-    xAxis: { type: 'category', data: tl.map((p) => p.date) },
+    legend: { data: ['历史', 'AI 预测（未来 7 天）'], bottom: 0 },
+    grid: { left: 40, right: 16, top: 30, bottom: 32 },
+    xAxis: { type: 'category', data: allDates },
     yAxis: { type: 'value', min: 0, max: 100, name: '指数' },
     series: [
       {
+        name: '历史',
         type: 'line',
         smooth: true,
-        data: tl.map((p) => p.score),
+        data: histAlign,
         areaStyle: { opacity: 0.15 },
+        lineStyle: { color: '#0ea5e9', width: 2 },
+        itemStyle: { color: '#0ea5e9' },
         markLine: {
           silent: true,
           data: [
@@ -231,8 +272,16 @@ function renderTrend() {
           ],
         },
       },
+      {
+        name: 'AI 预测（未来 7 天）',
+        type: 'line',
+        smooth: true,
+        data: fcAlign,
+        lineStyle: { color: '#a855f7', width: 3, type: 'dashed' },
+        itemStyle: { color: '#a855f7' },
+        symbolSize: 8,
+      },
     ],
-    color: ['#0ea5e9'],
   })
 }
 
@@ -279,7 +328,7 @@ async function onSend() {
     const r = await postMessage(currentConv.value.id, text)
     messages.value.push(r.user_message, r.assistant_message)
     if (r.assistant_message.risk_level === 'high') {
-      ElMessage.warning('检测到高风险表达，已记录')
+      crisisRef.value?.show()
       await load()
     }
     await nextTick()
@@ -354,6 +403,17 @@ watch(studentId, () => load())
 .chart {
   width: 100%;
   height: 300px;
+}
+.forecast-tip {
+  margin-top: 8px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  &.green { background: #f0fdf4; color: #166534; }
+  &.blue { background: #f0f9ff; color: #075985; }
+  &.orange { background: #fffbeb; color: #92400e; }
+  &.red { background: #fef2f2; color: #991b1b; }
+  .meta { margin-left: 8px; color: #94a3b8; font-size: 12px; }
 }
 .empty {
   color: #94a3b8;

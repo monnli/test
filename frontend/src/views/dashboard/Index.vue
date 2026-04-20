@@ -1,5 +1,29 @@
 <template>
   <div class="dashboard" ref="rootRef">
+    <!-- 开场动画 -->
+    <transition name="splash-fade">
+      <div v-if="splashVisible" class="splash">
+        <div class="splash-bg" />
+        <div class="splash-content">
+          <svg viewBox="0 0 64 64" width="120" height="120" class="splash-logo">
+            <defs>
+              <linearGradient id="sg" x1="0" x2="1" y1="0" y2="1">
+                <stop offset="0" stop-color="#22c55e" />
+                <stop offset="1" stop-color="#0ea5e9" />
+              </linearGradient>
+            </defs>
+            <rect width="64" height="64" rx="14" fill="url(#sg)" />
+            <path d="M32 14c-9 0-16 6-16 14 0 6 4 11 10 13v9h12v-9c6-2 10-7 10-13 0-8-7-14-16-14z" fill="#fff" />
+          </svg>
+          <h1 class="splash-title">青苗守护者</h1>
+          <h2 class="splash-sub">用一双 AI 慧眼 · 守护每一株青苗</h2>
+          <div class="splash-loading">
+            <span /><span /><span />
+          </div>
+        </div>
+      </div>
+    </transition>
+
     <header class="topbar">
       <div class="left">
         <span class="dot" />
@@ -122,6 +146,7 @@ const data = ref<DashboardAll | null>(null)
 const now = ref('')
 const rootRef = ref<HTMLDivElement>()
 const isFullscreen = ref(false)
+const splashVisible = ref(true)
 let timer: any
 let refreshTimer: any
 
@@ -341,6 +366,10 @@ onMounted(() => {
       rootRef.value?.requestFullscreen?.().catch(() => {})
     }
   }, 300)
+  // 开场动画
+  setTimeout(() => {
+    splashVisible.value = false
+  }, 2500)
 })
 
 onBeforeUnmount(() => {
@@ -638,5 +667,88 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* 开场动画 */
+.splash {
+  position: absolute;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(ellipse at center, #0b1224 0%, #020617 100%);
+  overflow: hidden;
+}
+.splash-bg {
+  position: absolute;
+  inset: -50%;
+  background: conic-gradient(from 0deg, transparent, rgba(34,211,238,0.2), transparent);
+  animation: splash-rotate 4s linear infinite;
+}
+@keyframes splash-rotate {
+  to { transform: rotate(360deg); }
+}
+.splash-content {
+  position: relative;
+  text-align: center;
+  z-index: 1;
+}
+.splash-logo {
+  filter: drop-shadow(0 0 30px rgba(34, 211, 238, 0.6));
+  animation: splash-pop 1s ease-out;
+}
+@keyframes splash-pop {
+  from { transform: scale(0.5); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+.splash-title {
+  margin: 16px 0 8px;
+  font-size: 48px;
+  font-weight: 900;
+  letter-spacing: 12px;
+  background: linear-gradient(90deg, #22d3ee, #a78bfa, #22c55e);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: splash-up 1s ease-out 0.2s both;
+}
+.splash-sub {
+  margin: 0;
+  font-size: 16px;
+  color: #94a3b8;
+  letter-spacing: 6px;
+  font-weight: 400;
+  animation: splash-up 1s ease-out 0.4s both;
+}
+@keyframes splash-up {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.splash-loading {
+  margin-top: 24px;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  span {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #22d3ee;
+    animation: splash-bounce 1.2s ease-in-out infinite;
+  }
+  span:nth-child(2) { animation-delay: 0.2s; }
+  span:nth-child(3) { animation-delay: 0.4s; }
+}
+@keyframes splash-bounce {
+  0%, 100% { transform: scale(1); opacity: 0.4; }
+  50% { transform: scale(1.5); opacity: 1; }
+}
+.splash-fade-leave-active {
+  transition: opacity 0.5s, transform 0.5s;
+}
+.splash-fade-leave-to {
+  opacity: 0;
+  transform: scale(1.05);
 }
 </style>

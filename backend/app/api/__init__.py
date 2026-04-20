@@ -36,3 +36,11 @@ api_bp.register_blueprint(dashboard_bp, url_prefix="/dashboard")
 from .reports import reports_bp  # noqa: E402
 
 api_bp.register_blueprint(reports_bp, url_prefix="/reports")
+
+from .ethics import ethics_bp  # noqa: E402
+
+api_bp.register_blueprint(ethics_bp, url_prefix="/ethics")
+
+from .enhance import enhance_bp  # noqa: E402
+
+api_bp.register_blueprint(enhance_bp, url_prefix="/enhance")

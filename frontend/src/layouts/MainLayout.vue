@@ -1,4 +1,5 @@
 <template>
+  <DemoMode />
   <el-container class="main-layout">
     <el-aside :width="collapsed ? '64px' : '220px'" class="aside">
       <div class="brand" :class="{ collapsed }">
@@ -95,6 +96,7 @@ import {
   Bell,
   Cpu,
   DataAnalysis,
+  DataLine,
   Document,
   Expand,
   Fold,
@@ -112,12 +114,20 @@ import {
 import { ElMessageBox } from 'element-plus'
 
 import { useUserStore } from '@/stores/user'
+import DemoMode from '@/components/DemoMode.vue'
 
 const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
 
 const collapsed = ref(false)
+
+// 手机端自动折叠
+function checkMobile() {
+  collapsed.value = window.innerWidth < 768
+}
+checkMobile()
+window.addEventListener('resize', checkMobile)
 
 interface MenuItem {
   path: string
@@ -159,6 +169,20 @@ const menu: MenuItem[] = [
   { path: '/correlation', title: '关联分析', icon: DataAnalysis },
   { path: '/alerts', title: '预警中心', icon: Bell },
   { path: '/reports', title: '报告中心', icon: Document },
+  { path: '/ethics', title: '负责任 AI', icon: Lock },
+  {
+    path: '/enhance',
+    title: 'AI 增强',
+    icon: Cpu,
+    children: [
+      { path: '/enhance/cluster', title: '群体聚类', icon: PieChart },
+      { path: '/enhance/intervention', title: '干预闭环', icon: DataLine },
+      { path: '/enhance/graph', title: '知识图谱', icon: DataAnalysis },
+      { path: '/enhance/multimodal', title: '多模态融合', icon: Histogram },
+      { path: '/enhance/story', title: '小李的故事', icon: Avatar },
+      { path: '/enhance/compare', title: '产品对比', icon: Document },
+    ],
+  },
   {
     path: '/system',
     title: '系统管理',
@@ -292,6 +316,18 @@ async function onCommand(cmd: string) {
 .main-content {
   background: #f1f5f9;
   padding: 16px;
+}
+
+@media (max-width: 768px) {
+  .topbar :deep(.el-breadcrumb) {
+    display: none;
+  }
+  .topbar .name {
+    display: none;
+  }
+  .main-content {
+    padding: 8px;
+  }
 }
 
 .fade-slide-enter-active,
