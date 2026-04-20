@@ -1,8 +1,37 @@
-# 青苗守护者 · AI 中小学生课堂行为与心理健康综合分析平台
+<p align="center">
+  <img src="frontend/public/favicon.svg" width="80" alt="青苗守护者" />
+</p>
 
-> 全国大学生计算机设计大赛 · 人工智能应用赛道参赛作品
+<h1 align="center">青苗守护者</h1>
+<h3 align="center">AI 中小学生课堂行为与心理健康综合分析平台</h3>
 
-「用一双 AI 慧眼，守护每一株青苗的成长状态」—— 通过课堂视频、心理量表、文本表达等多模态数据的融合分析，为学校提供从「群体行为洞察」到「个体心理预警」的一站式智能辅助决策平台。
+<p align="center">
+  <img src="https://img.shields.io/badge/%E5%9B%BD%E8%B5%9B-%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%E5%BA%94%E7%94%A8%E8%B5%9B%E9%81%93-22c55e?style=flat-square" />
+  <img src="https://img.shields.io/badge/Python-3.10+-3776AB?style=flat-square&logo=python&logoColor=white" />
+  <img src="https://img.shields.io/badge/Vue-3.4-4FC08D?style=flat-square&logo=vue.js&logoColor=white" />
+  <img src="https://img.shields.io/badge/Flask-3.0-000000?style=flat-square&logo=flask&logoColor=white" />
+  <img src="https://img.shields.io/badge/FastAPI-0.111-009688?style=flat-square&logo=fastapi&logoColor=white" />
+  <img src="https://img.shields.io/badge/MySQL-8.0-4479A1?style=flat-square&logo=mysql&logoColor=white" />
+  <img src="https://img.shields.io/badge/License-Academic-orange?style=flat-square" />
+</p>
+
+<p align="center">
+  <strong>「用一双 AI 慧眼 · 守护每一株青苗」</strong>
+</p>
+
+<p align="center">
+  通过课堂视频、心理量表、文本表达等多模态数据的融合分析<br/>
+  为学校提供从「群体行为洞察」到「个体心理预警」的一站式智能辅助决策平台
+</p>
+
+<p align="center">
+  <a href="docs/演示视频脚本.md">📹 演示视频</a> ·
+  <a href="docs/项目报告大纲.md">📄 项目报告</a> ·
+  <a href="docs/答辩PPT大纲.md">🎤 答辩资料</a> ·
+  <a href="docs/%E4%BC%A6%E7%90%86%E8%AE%BE%E8%AE%A1%E8%AF%B4%E6%98%8E.md">🛡️ 伦理设计</a>
+</p>
+
+---
 
 ---
 
