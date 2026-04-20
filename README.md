@@ -103,6 +103,24 @@ qingmiao-guardian/
 
 ## 🚀 快速开始
 
+### 方式一：Docker 一键启动（推荐 · 最简单）
+
+**任何装了 Docker Desktop 的电脑**（无需 Python / Node / MySQL）：
+
+```bash
+git clone https://github.com/monnli/qingmiao-guardian.git
+cd qingmiao-guardian
+docker compose up -d --build
+```
+
+约 5~10 分钟首次构建 + 1 分钟首次数据库初始化，然后浏览器打开 **http://localhost** 即可。默认账号 `admin / admin123`。
+
+详见 [docs/Docker部署指南.md](docs/Docker部署指南.md)。
+
+---
+
+### 方式二：本地开发（开发者）
+
 > 假设你已经在本机安装了 MySQL 8.x、Python 3.10+、Node 18+，并激活 conda 环境 `kt_env`。
 
 ### 一键初始化（推荐）

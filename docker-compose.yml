@@ -1,0 +1,98 @@
+# ======================================================================
+# 青苗守护者 · 一键启动（docker compose up -d）
+# 包含：
+#   - mysql：数据库
+#   - qingmiao：前端 + 后端 + AI 推理服务（一体化容器）
+# ======================================================================
+
+services:
+
+  mysql:
+    image: mysql:8.0
+    container_name: qingmiao-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root123}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-qingmiao_guardian}
+      MYSQL_USER: ${MYSQL_USER:-qingmiao}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-qingmiao123}
+      TZ: Asia/Shanghai
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-authentication-plugin=mysql_native_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD:-root123}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks: [qingmiao]
+
+  qingmiao:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    image: qingmiao-guardian:latest
+    container_name: qingmiao-app
+    restart: unless-stopped
+    environment:
+      # ---------- MySQL ----------
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_USER: ${MYSQL_USER:-qingmiao}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-qingmiao123}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-qingmiao_guardian}
+
+      # ---------- 应用 ----------
+      APP_ENV: production
+      FLASK_DEBUG: 0
+      SECRET_KEY: ${SECRET_KEY:-change-me-in-production-please}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-change-me-too-please}
+
+      # ---------- AI 服务（容器内本地）----------
+      AI_SERVICE_URL: http://127.0.0.1:8000
+      AI_DEVICE: ${AI_DEVICE:-cpu}
+
+      # ---------- 通义千问（可选，不填走 mock）----------
+      DASHSCOPE_API_KEY: ${DASHSCOPE_API_KEY:-}
+      QWEN_MODEL: ${QWEN_MODEL:-qwen-plus}
+
+      # ---------- 文件存储 ----------
+      STORAGE_BACKEND: local
+      LOCAL_STORAGE_DIR: /app/storage
+
+      # ---------- 日志 ----------
+      LOG_LEVEL: INFO
+      LOG_DIR: /app/logs
+
+      # ---------- 上传 ----------
+      MAX_VIDEO_SIZE_MB: 500
+
+      # ---------- CORS ----------
+      CORS_ORIGINS: "*"
+
+      TZ: Asia/Shanghai
+    ports:
+      - "80:80"        # 前端（Nginx）
+      - "5000:5000"    # 后端 API（可选暴露，用于调试）
+      - "8000:8000"    # AI 服务（可选暴露，用于调试）
+    volumes:
+      - qingmiao_storage:/app/storage
+      - qingmiao_logs:/app/logs
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks: [qingmiao]
+
+volumes:
+  mysql_data:
+  qingmiao_storage:
+  qingmiao_logs:
+
+networks:
+  qingmiao:
+    driver: bridge

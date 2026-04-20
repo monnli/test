@@ -1,0 +1,60 @@
+# Git
+.git
+.gitignore
+.github
+
+# Docker
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# Python
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+**/.coverage
+**/htmlcov
+venv
+env
+.venv
+kt_env
+
+# Node
+**/node_modules
+**/dist
+**/dist-ssr
+**/.vite
+**/npm-debug.log*
+
+# 日志与存储
+logs
+storage
+data
+uploads
+minio_data
+*.log
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+.DS_Store
+
+# 环境变量
+.env
+.env.local
+
+# 测试
+tests
+**/tests
+
+# 文档（放进镜像没必要）
+docs/**/*.md
+
+# AI 模型权重（体积大，不打包进镜像）
+ai_service/models/*.pt
+ai_service/models/*.pth
+ai_service/models/*.onnx
+ai_service/models/weights/
+ai_service/models/cache/
