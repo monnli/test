@@ -114,9 +114,14 @@ const routes: RouteRecordRaw[] = [
         children: [
           { path: '', component: () => import('@/views/classroom/Videos.vue'), meta: { title: '视频库' } },
           { path: 'upload', component: () => import('@/views/classroom/Upload.vue'), meta: { title: '上传视频' } },
-          { path: 'realtime', component: () => import('@/views/classroom/Realtime.vue'), meta: { title: '实时摄像头' } },
+          { path: 'realtime', component: () => import('@/views/classroom/Realtime.vue'), meta: { title: '实时摄像头（笔记本）' } },
           { path: 'video/:videoId', component: () => import('@/views/classroom/VideoTasks.vue'), meta: { title: '视频任务' } },
           { path: 'task/:taskId', component: () => import('@/views/classroom/TaskDetail.vue'), meta: { title: '分析报告' } },
+          // M10 新增
+          { path: 'cameras', component: () => import('@/views/classroom/CameraWall.vue'), meta: { title: '摄像头墙' } },
+          { path: 'camera-manage', component: () => import('@/views/classroom/CameraManage.vue'), meta: { title: '摄像头管理', requiresAdmin: true } },
+          { path: 'live/:cameraId', component: () => import('@/views/classroom/CameraLive.vue'), meta: { title: '实时直播' } },
+          { path: 'schedule', component: () => import('@/views/classroom/Schedule.vue'), meta: { title: '课表管理' } },
         ],
       },
       // 心理健康

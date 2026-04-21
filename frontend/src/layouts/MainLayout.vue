@@ -160,9 +160,12 @@ const menu: MenuItem[] = [
     title: '课堂分析',
     icon: VideoCamera,
     children: [
+      { path: '/classroom/cameras', title: '摄像头墙', icon: Monitor },
+      { path: '/classroom/camera-manage', title: '摄像头管理', icon: Setting, requiresAdmin: true },
+      { path: '/classroom/schedule', title: '课表管理', icon: Notebook },
       { path: '/classroom', title: '视频库', icon: VideoCamera },
       { path: '/classroom/upload', title: '上传视频', icon: VideoCamera },
-      { path: '/classroom/realtime', title: '实时摄像头', icon: VideoCamera },
+      { path: '/classroom/realtime', title: '笔记本摄像头', icon: VideoCamera },
     ],
   },
   { path: '/psychology', title: '心理健康', icon: Histogram },
