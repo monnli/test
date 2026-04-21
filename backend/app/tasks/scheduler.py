@@ -18,8 +18,6 @@ from threading import Thread
 from flask import Flask
 from loguru import logger
 
-from ..extensions import db
-
 
 _scheduler_running = False
 
@@ -39,78 +37,105 @@ def _loop(app: Flask) -> None:
             with app.app_context():
                 _tick(app)
         except Exception as exc:  # noqa: BLE001
-            logger.exception(f"调度器异常：{exc}")
+            # 任何异常都不退出主循环（M10 新表未迁移时会报错是正常的）
+            logger.debug(f"调度器本轮异常（不影响主功能）：{exc}")
         time.sleep(60)
 
 
 def _tick(app: Flask) -> None:
+    """单轮调度逻辑。任何异常静默吞掉，避免阻塞主循环。"""
+    from ..extensions import db
     from ..models import Camera, ClassSchedule, ClassSession
     from ..services.camera_service import find_active_schedules
     from ..tasks.live_worker import is_running, start_live_analysis, stop_live_analysis
 
     now = datetime.now()
+
+    # 1. 启动应启动的
     try:
         active = find_active_schedules(now)
     except Exception as exc:  # noqa: BLE001
-        # 课表表不存在或 schema 不匹配时静默跳过，不影响主应用
-        logger.debug(f"调度器查询失败（可能表未建）：{exc}")
-        return
+        logger.debug(f"课表查询失败（class_schedules 表可能未建）：{exc}")
+        active = []
 
-    # 1. 启动应启动的
     for sch in active:
-        camera = db.session.query(Camera).filter_by(
-            class_id=sch.class_id, is_deleted=False
-        ).first()
-        if not camera:
-            continue
-        if is_running(camera.id):
-            continue
-        existing = (
-            db.session.query(ClassSession)
-            .filter(
-                ClassSession.camera_id == camera.id,
-                ClassSession.class_id == sch.class_id,
-                ClassSession.session_date == now.date(),
-                ClassSession.period == sch.period,
-                ClassSession.status.in_(["scheduled", "running"]),
+        try:
+            camera = (
+                db.session.query(Camera)
+                .filter_by(class_id=sch.class_id, is_deleted=False)
+                .first()
             )
-            .first()
-        )
-        if existing and existing.status == "running":
-            continue
-        if not existing:
-            existing = ClassSession(
-                class_id=sch.class_id,
-                subject_id=sch.subject_id,
-                teacher_id=sch.teacher_id,
-                session_date=now.date(),
-                period=sch.period,
-                camera_id=camera.id,
-                trigger_type="schedule",
-                status="scheduled",
-                title=f"{sch.weekday}周{sch.period}节 自动识别",
+            if not camera:
+                continue
+            if is_running(camera.id):
+                continue
+            existing = (
+                db.session.query(ClassSession)
+                .filter(
+                    ClassSession.camera_id == camera.id,
+                    ClassSession.class_id == sch.class_id,
+                    ClassSession.session_date == now.date(),
+                    ClassSession.period == sch.period,
+                    ClassSession.status.in_(["scheduled", "running"]),
+                )
+                .first()
             )
-            db.session.add(existing)
-            db.session.commit()
+            if existing and existing.status == "running":
+                continue
+            if not existing:
+                existing = ClassSession(
+                    class_id=sch.class_id,
+                    subject_id=sch.subject_id,
+                    teacher_id=sch.teacher_id,
+                    session_date=now.date(),
+                    period=sch.period,
+                    camera_id=camera.id,
+                    trigger_type="schedule",
+                    status="scheduled",
+                    title=f"{sch.weekday}周{sch.period}节 自动识别",
+                )
+                db.session.add(existing)
+                db.session.commit()
 
-        start_live_analysis(app, existing.id)
+            start_live_analysis(app, existing.id)
+        except Exception as exc:  # noqa: BLE001
+            logger.debug(f"启动 session 失败：{exc}")
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
 
     # 2. 停止已到点的
-    running_sessions = (
-        db.session.query(ClassSession).filter(ClassSession.status == "running").all()
-    )
+    try:
+        running_sessions = (
+            db.session.query(ClassSession).filter(ClassSession.status == "running").all()
+        )
+    except Exception as exc:  # noqa: BLE001
+        logger.debug(f"查询运行中 session 失败（class_sessions 缺字段？）：{exc}")
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+        return
+
     cur_time = now.time()
     for s in running_sessions:
-        # 查这节课的 schedule
-        sch_candidates = (
-            db.session.query(ClassSchedule)
-            .filter(
-                ClassSchedule.is_deleted.is_(False),
-                ClassSchedule.class_id == s.class_id,
-                ClassSchedule.period == s.period,
-                ClassSchedule.weekday == now.isoweekday(),
+        try:
+            sch_candidates = (
+                db.session.query(ClassSchedule)
+                .filter(
+                    ClassSchedule.is_deleted.is_(False),
+                    ClassSchedule.class_id == s.class_id,
+                    ClassSchedule.period == s.period,
+                    ClassSchedule.weekday == now.isoweekday(),
+                )
+                .first()
             )
-            .first()
-        )
-        if sch_candidates and cur_time > sch_candidates.end_time:
-            stop_live_analysis(app, s.id, reason="scheduled_end")
+            if sch_candidates and cur_time > sch_candidates.end_time:
+                stop_live_analysis(app, s.id, reason="scheduled_end")
+        except Exception as exc:  # noqa: BLE001
+            logger.debug(f"停止 session 失败：{exc}")
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
