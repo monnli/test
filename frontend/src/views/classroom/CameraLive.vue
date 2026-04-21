@@ -139,7 +139,7 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { io, type Socket } from 'socket.io-client'
 import { ElMessage } from 'element-plus'
 import { VideoCamera } from '@element-plus/icons-vue'
@@ -154,6 +154,7 @@ import {
 import { useUserStore } from '@/stores/user'
 
 const route = useRoute()
+const router = useRouter()
 const userStore = useUserStore()
 const cameraId = computed(() => Number(route.params.cameraId))
 const camera = ref<Camera | null>(null)
@@ -185,6 +186,17 @@ function pct(key: string, base = 30): number {
 async function load() {
   const cams = (await listCameras()).items
   camera.value = cams.find((c) => c.id === cameraId.value) || null
+  // 若指定摄像头不存在，回退到第一个在线摄像头，或跳回列表页
+  if (!camera.value) {
+    if (cams.length > 0) {
+      router.replace(`/classroom/live/${cams[0].id}`)
+      return
+    } else {
+      ElMessage.warning('暂无可用摄像头，请先在摄像头管理中添加')
+      router.replace('/classroom/cameras')
+      return
+    }
+  }
   await loadStatus()
 }
 

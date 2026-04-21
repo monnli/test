@@ -135,17 +135,40 @@ def demo_script():
     """返回演示脚本：自动播放路径"""
     return ok({
         "steps": [
+            # —— 开场：工作台与组织架构 ——
             {"path": "/workbench", "duration": 5000, "narrate": "工作台：教师每日入口"},
             {"path": "/org/students", "duration": 5000, "narrate": "组织架构：5 级精细权限"},
-            {"path": "/classroom", "duration": 5000, "narrate": "课堂分析：上传视频自动识别"},
+            {"path": "/org/faces", "duration": 5000, "narrate": "人脸库管理：提取为 512 维 embedding，原图加密"},
+
+            # —— M10 视频识别核心（新）——
+            {"path": "/classroom/schedule", "duration": 7000,
+             "narrate": "课表管理：班级×教师×时段三维度冲突检测"},
+            {"path": "/classroom/camera-manage", "duration": 6000,
+             "narrate": "摄像头管理：支持 RTSP / HLS / 本地文件多协议接入"},
+            {"path": "/classroom/cameras", "duration": 8000,
+             "narrate": "摄像头墙：全校教室实时状态一览，课表自动触发识别"},
+            {"path": "/classroom/live/1", "duration": 12000,
+             "narrate": "实时直播：9 种行为识别 + 表情 + 学生身份，WebSocket 毫秒级回传"},
+
+            # —— 课堂分析历史与笔记本摄像头 ——
+            {"path": "/classroom", "duration": 5000, "narrate": "课堂视频库：上传+自动分析"},
+            {"path": "/classroom/realtime", "duration": 5000, "narrate": "笔记本摄像头：WebRTC 实时推流"},
+
+            # —— 心理健康 ——
             {"path": "/psychology", "duration": 5000, "narrate": "心理健康：5 套国际标准量表"},
+
+            # —— 关联与预警 ——
             {"path": "/correlation", "duration": 6000, "narrate": "关联分析：多维数据相关性"},
             {"path": "/alerts", "duration": 6000, "narrate": "预警中心：4 级风险工单"},
+
+            # —— AI 增强功能 ——
             {"path": "/enhance/cluster", "duration": 6000, "narrate": "学生群体智能聚类（K-Means）"},
             {"path": "/enhance/intervention", "duration": 6000, "narrate": "干预闭环效果追踪"},
             {"path": "/enhance/graph", "duration": 6000, "narrate": "学校知识图谱"},
             {"path": "/enhance/multimodal", "duration": 5000, "narrate": "多模态融合时序分析"},
             {"path": "/enhance/compare", "duration": 6000, "narrate": "产品差异化对比"},
+
+            # —— 负责任 AI + 故事 + 大屏 ——
             {"path": "/ethics", "duration": 8000, "narrate": "负责任 AI：伦理设计透明展示"},
             {"path": "/enhance/story", "duration": 12000, "narrate": "小李的成长故事 · 我们如何陪伴一名学生从困境走向阳光"},
             {"path": "/reports", "duration": 5000, "narrate": "AI 自动生成 PDF 报告"},
