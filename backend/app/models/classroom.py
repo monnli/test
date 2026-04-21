@@ -32,6 +32,21 @@ class ClassSession(BaseModel):
     title: Mapped[str | None] = mapped_column(String(200), comment="课题")
     note: Mapped[str | None] = mapped_column(String(500))
 
+    # M10 扩展
+    camera_id: Mapped[int | None] = mapped_column(ForeignKey("cameras.id"), index=True)
+    trigger_type: Mapped[str] = mapped_column(
+        String(16), default="manual",
+        comment="schedule / manual / upload"
+    )
+    status: Mapped[str] = mapped_column(
+        String(16), default="scheduled",
+        comment="scheduled / running / ended / auto_ended"
+    )
+    started_at: Mapped[datetime | None] = mapped_column(DateTime)
+    ended_at: Mapped[datetime | None] = mapped_column(DateTime)
+    engagement_score: Mapped[float] = mapped_column(Float, default=0.0)
+    no_person_minutes: Mapped[int] = mapped_column(Integer, default=0)
+
 
 class Video(BaseModel):
     """视频文件。"""

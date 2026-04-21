@@ -44,3 +44,7 @@ api_bp.register_blueprint(ethics_bp, url_prefix="/ethics")
 from .enhance import enhance_bp  # noqa: E402
 
 api_bp.register_blueprint(enhance_bp, url_prefix="/enhance")
+
+from .cameras import cameras_bp  # noqa: E402
+
+api_bp.register_blueprint(cameras_bp, url_prefix="/m10")

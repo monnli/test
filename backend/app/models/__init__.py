@@ -26,6 +26,7 @@ from .classroom import (
 )
 from .face import FaceEmbedding
 from .alert import Alert, Exam, InterventionRecord, Score
+from .camera import Camera, ClassSchedule
 from .report import Report
 from .psychology import (
     AIConversation,
@@ -84,6 +85,8 @@ __all__ = [
     "Alert",
     "InterventionRecord",
     "Report",
+    "Camera",
+    "ClassSchedule",
     "ROLE_SUPER_ADMIN",
     "ROLE_SCHOOL_ADMIN",
     "ROLE_PSY_TEACHER",
