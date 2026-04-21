@@ -110,10 +110,14 @@ def create_app(config_class: type[BaseConfig] | None = None) -> Flask:
     from . import sockets  # noqa: F401
 
     # 启动课表调度器（生产/开发环境启动，测试不启）
+    # 包在 try-except 里，避免调度器初始化失败导致整个应用启动失败
     if app.config.get("APP_ENV") != "testing":
-        from .tasks.scheduler import start_scheduler
+        try:
+            from .tasks.scheduler import start_scheduler
 
-        start_scheduler(app)
+            start_scheduler(app)
+        except Exception as exc:  # noqa: BLE001
+            logger.warning(f"课表调度器启动失败（不影响主功能）：{exc}")
 
     @app.route("/")
     def index():

@@ -49,7 +49,12 @@ def _tick(app: Flask) -> None:
     from ..tasks.live_worker import is_running, start_live_analysis, stop_live_analysis
 
     now = datetime.now()
-    active = find_active_schedules(now)
+    try:
+        active = find_active_schedules(now)
+    except Exception as exc:  # noqa: BLE001
+        # 课表表不存在或 schema 不匹配时静默跳过，不影响主应用
+        logger.debug(f"调度器查询失败（可能表未建）：{exc}")
+        return
 
     # 1. 启动应启动的
     for sch in active:
