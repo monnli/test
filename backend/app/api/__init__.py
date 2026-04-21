@@ -48,3 +48,7 @@ api_bp.register_blueprint(enhance_bp, url_prefix="/enhance")
 from .cameras import cameras_bp  # noqa: E402
 
 api_bp.register_blueprint(cameras_bp, url_prefix="/m10")
+
+from .live import live_bp  # noqa: E402
+
+api_bp.register_blueprint(live_bp, url_prefix="/m10/live")

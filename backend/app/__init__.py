@@ -109,6 +109,12 @@ def create_app(config_class: type[BaseConfig] | None = None) -> Flask:
     # 注册 WebSocket 事件
     from . import sockets  # noqa: F401
 
+    # 启动课表调度器（生产/开发环境启动，测试不启）
+    if app.config.get("APP_ENV") != "testing":
+        from .tasks.scheduler import start_scheduler
+
+        start_scheduler(app)
+
     @app.route("/")
     def index():
         return jsonify(
