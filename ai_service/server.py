@@ -28,7 +28,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 from PIL import Image
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field  # noqa: F401
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 load_dotenv(PROJECT_ROOT / ".env")
@@ -43,10 +43,13 @@ logger.add(sys.stderr, level=LOG_LEVEL, format="<green>{time:HH:mm:ss}</green> |
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from pipelines import (  # noqa: E402
+    analyze_classroom_frame,
     behavior_pipeline,
     emotion_pipeline,
     face_pipeline,
     find_best_match,
+    pose_pipeline,
+    reset_classroom_tracker,
     text_pipeline,
 )
 from utils.image import decode_base64_image  # noqa: E402
@@ -130,6 +133,7 @@ def list_pipelines():
                 face_pipeline.status_info(),
                 emotion_pipeline.status_info(),
                 behavior_pipeline.status_info(),
+                pose_pipeline.status_info(),
                 text_pipeline.status_info(),
             ]
         },
@@ -143,6 +147,7 @@ def load_pipeline(name: str):
         "emotion": emotion_pipeline,
         "behavior": behavior_pipeline,
         "text": text_pipeline,
+        "pose": pose_pipeline,
     }
     if name not in mapping:
         raise HTTPException(status_code=404, detail=f"未知流水线：{name}")
@@ -204,6 +209,36 @@ def emotion_predict(req: EmotionRequest):
         "message": "ok",
         "data": {**result, "pipeline_status": emotion_pipeline.status},
     }
+
+
+# ========================== 课堂综合分析 ==========================
+
+class ClassroomAnalyzeRequest(BaseModel):
+    image: str
+    face_library: list[dict] = Field(default_factory=list)
+    camera_key: str = "default"
+    recognize_face: bool = True
+
+
+@app.post("/classroom/analyze", summary="课堂一帧综合分析（所有流水线联动）")
+def classroom_analyze(req: ClassroomAnalyzeRequest):
+    try:
+        img = decode_base64_image(req.image)
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=400, detail=f"图像解码失败：{exc}")
+    result = analyze_classroom_frame(
+        img,
+        face_library=req.face_library or None,
+        camera_key=req.camera_key,
+        recognize_face=req.recognize_face,
+    )
+    return {"code": 0, "message": "ok", "data": result}
+
+
+@app.post("/classroom/reset-tracker/{camera_key}", summary="重置某摄像头追踪器")
+def reset_tracker(camera_key: str):
+    reset_classroom_tracker(camera_key)
+    return {"code": 0, "message": "ok"}
 
 
 # ========================== 行为 ==========================
