@@ -33,12 +33,26 @@ if errorlevel 1 (
 )
 
 echo.
-echo [3/3] 写入增强演示数据（量表 / 文本 / 对话 / 成绩 / 课堂 / 时序 / 预警）...
+echo [3/5] 写入增强演示数据（量表 / 文本 / 对话 / 成绩 / 课堂 / 时序 / 预警）...
 python scripts\seed_demo_extras.py
 if errorlevel 1 (
     echo [ERROR] 增强数据写入失败
     pause
     exit /b 1
+)
+
+echo.
+echo [4/5] 合成 5 段演示课堂视频（storage\demo_videos\）...
+python scripts\generate_demo_videos.py
+if errorlevel 1 (
+    echo [WARN] 演示视频合成失败（可忽略，需先装 opencv-python 和 Pillow）
+)
+
+echo.
+echo [5/5] 创建摄像头 + 课表（2026 春季学期）...
+python scripts\seed_cameras_and_schedules.py
+if errorlevel 1 (
+    echo [WARN] 摄像头/课表 seed 失败（可忽略）
 )
 
 echo.

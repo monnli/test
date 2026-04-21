@@ -78,9 +78,22 @@ def download_hsemotion():
         print(f"[ERR] HSEmotion 下载失败：{exc}")
 
 
+def check_mediapipe():
+    try:
+        import mediapipe as mp  # type: ignore
+
+        _ = mp.solutions.pose.Pose()
+        _ = mp.solutions.face_mesh.FaceMesh()
+        print("[OK] MediaPipe Pose + FaceMesh 已就绪")
+    except ImportError:
+        print("[MISS] mediapipe 未安装，请执行：pip install mediapipe")
+    except Exception as exc:  # noqa: BLE001
+        print(f"[ERR] MediaPipe 初始化失败：{exc}")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--only", choices=["face", "emotion", "behavior"], help="只下载指定模型")
+    parser.add_argument("--only", choices=["face", "emotion", "behavior", "pose"], help="只下载指定模型")
     args = parser.parse_args()
 
     MODEL_DIR.mkdir(parents=True, exist_ok=True)
@@ -93,6 +106,8 @@ def main() -> int:
         download_insightface()
     if args.only in (None, "emotion"):
         download_hsemotion()
+    if args.only in (None, "pose"):
+        check_mediapipe()
 
     print("-" * 60)
     print("提示：")
