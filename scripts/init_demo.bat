@@ -6,13 +6,30 @@ setlocal enabledelayedexpansion
 chcp 65001 > nul
 cd /d %~dp0..
 
+REM ========== conda 环境自动激活 ==========
+set CONDA_ENV=kt_env
+if exist ".env" (
+    for /f "tokens=2 delims==" %%A in ('findstr /B "CONDA_ENV=" .env 2^>nul') do set CONDA_ENV=%%A
+)
+
+set CONDA_HOOK=
+if exist "%USERPROFILE%\Anaconda3\Scripts\activate.bat" set CONDA_HOOK=%USERPROFILE%\Anaconda3\Scripts\activate.bat
+if exist "%USERPROFILE%\miniconda3\Scripts\activate.bat" set CONDA_HOOK=%USERPROFILE%\miniconda3\Scripts\activate.bat
+if exist "C:\ProgramData\Anaconda3\Scripts\activate.bat" set CONDA_HOOK=C:\ProgramData\Anaconda3\Scripts\activate.bat
+if exist "C:\ProgramData\Miniconda3\Scripts\activate.bat" set CONDA_HOOK=C:\ProgramData\Miniconda3\Scripts\activate.bat
+
+if not "%CONDA_HOOK%"=="" (
+    echo 激活 conda 环境：%CONDA_ENV%
+    call "%CONDA_HOOK%" %CONDA_ENV%
+)
+
 echo.
 echo ============================================================
 echo   青苗守护者 · 一键初始化（Windows）
 echo ============================================================
 echo.
 
-echo [1/3] 创建数据库与所有表...
+echo [1/5] 创建数据库与所有表...
 python scripts\init_db.py
 if errorlevel 1 (
     echo.
@@ -24,7 +41,7 @@ if errorlevel 1 (
 )
 
 echo.
-echo [2/3] 写入基础数据（学校 / 班级 / 学生 / 教师 / 16 个演示账号）...
+echo [2/5] 写入基础数据（学校 / 班级 / 学生 / 教师 / 16 个演示账号）...
 python scripts\seed_demo_data.py
 if errorlevel 1 (
     echo [ERROR] 基础数据写入失败
@@ -60,13 +77,10 @@ echo ============================================================
 echo   初始化完成！
 echo.
 echo   下一步：双击 scripts\start_all.bat 启动所有服务
-echo   或手动启动：
-echo     - cd backend ^&^& python run.py
-echo     - cd ai_service ^&^& python server.py
-echo     - cd frontend ^&^& npm run dev
 echo.
 echo   浏览器访问：http://localhost:5173
 echo   默认账号：  admin / admin123
 echo ============================================================
 echo.
 pause
+endlocal
