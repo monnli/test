@@ -1,5 +1,5 @@
 <template>
-  <DemoMode />
+  <DemoMode ref="demoRef" />
   <el-container class="main-layout">
     <el-aside :width="collapsed ? '64px' : '220px'" class="aside">
       <div class="brand" :class="{ collapsed }">
@@ -50,6 +50,15 @@
           </el-breadcrumb>
         </div>
         <div class="right">
+          <el-button
+            size="small"
+            type="success"
+            plain
+            :icon="VideoPlay"
+            @click="demoRef?.toggle()"
+          >
+            演示模式
+          </el-button>
           <el-tag effect="plain" round type="success" size="small">
             {{ userStore.userInfo?.roles?.[0]?.name || '未授权' }}
           </el-tag>
@@ -110,6 +119,7 @@ import {
   SwitchButton,
   User,
   VideoCamera,
+  VideoPlay,
 } from '@element-plus/icons-vue'
 import { ElMessageBox } from 'element-plus'
 
@@ -121,6 +131,7 @@ const router = useRouter()
 const userStore = useUserStore()
 
 const collapsed = ref(false)
+const demoRef = ref<any>()
 
 // 手机端自动折叠
 function checkMobile() {

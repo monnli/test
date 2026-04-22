@@ -106,6 +106,9 @@ function onKey(e: KeyboardEvent) {
 
 onMounted(() => {
   window.addEventListener('keydown', onKey)
+  // 暴露全局方法方便手动调试
+  ;(window as any).__demoStart = start
+  ;(window as any).__demoStop = stop
 })
 
 onBeforeUnmount(() => {
@@ -113,6 +116,9 @@ onBeforeUnmount(() => {
   if (mainTimer) clearTimeout(mainTimer)
   if (progressTimer) clearInterval(progressTimer)
 })
+
+// 暴露给父组件
+defineExpose({ start, stop, toggle: () => (active.value ? stop() : start()) })
 </script>
 
 <style lang="scss" scoped>
