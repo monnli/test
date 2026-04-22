@@ -54,12 +54,40 @@ class BehaviorPipeline(BasePipeline):
     def _load(self) -> None:
         from ultralytics import YOLO  # type: ignore
 
-        model_path = AI_MODEL_DIR / "yolov8n.pt"
-        if not model_path.exists():
-            # ultralytics 会自动下载到默认缓存；这里也允许
-            logger.info(f"YOLOv8 权重不在本地 ({model_path})，使用 ultralytics 默认缓存或自动下载")
-            model_path = "yolov8n.pt"  # type: ignore
-        self._model = YOLO(str(model_path))
+        # 优先级：
+        # 1. 自训课堂行为模型（yolov8_classroom.pt）
+        # 2. 通用 yolov8n.pt（本地）
+        # 3. ultralytics 默认缓存/自动下载
+        classroom_model = AI_MODEL_DIR / "yolov8_classroom.pt"
+        generic_model = AI_MODEL_DIR / "yolov8n.pt"
+
+        if classroom_model.exists():
+            logger.success(f"🎯 加载自训课堂行为模型：{classroom_model}")
+            self._model = YOLO(str(classroom_model))
+            self._load_custom_labels()
+            return
+        if generic_model.exists():
+            logger.info(f"加载通用 YOLOv8：{generic_model}")
+            self._model = YOLO(str(generic_model))
+            return
+        logger.info("YOLOv8 权重不在本地，使用 ultralytics 默认缓存或自动下载")
+        self._model = YOLO("yolov8n.pt")
+
+    def _load_custom_labels(self) -> None:
+        """加载自训模型的中文标签映射。"""
+        import json
+
+        labels_file = AI_MODEL_DIR / "yolov8_classroom_labels.json"
+        if not labels_file.exists():
+            return
+        try:
+            data = json.loads(labels_file.read_text(encoding="utf-8"))
+            cn_map = data.get("labels_cn") or {}
+            # 合并到全局映射
+            CLASSROOM_BEHAVIORS_CN.update(cn_map)
+            logger.info(f"自训模型类别中文映射已合并：{list(cn_map.keys())}")
+        except Exception as exc:  # noqa: BLE001
+            logger.warning(f"加载自训标签失败：{exc}")
 
     def _infer(self, image: np.ndarray, conf: float = 0.35) -> dict[str, Any]:
         """image: RGB ndarray。"""
@@ -69,10 +97,17 @@ class BehaviorPipeline(BasePipeline):
         detections: list[dict[str, Any]] = []
         if result.boxes is None:
             return {"detections": [], "summary": {}}
+
+        # 判断是自训模型还是 COCO 通用模型：
+        # 通用模型类别很多（80 类）且包含 person；自训模型类别少（3~10 类）
+        is_custom = len(names) < 30 if isinstance(names, dict) else False
+
         for box in result.boxes:
             cls_id = int(box.cls.item()) if hasattr(box.cls, "item") else int(box.cls)
             label = names.get(cls_id, str(cls_id)) if isinstance(names, dict) else names[cls_id]
-            if cls_id not in COCO_INTEREST:
+            # 通用模型：只保留我们关心的 COCO 类别
+            # 自训模型：保留所有类别
+            if not is_custom and cls_id not in COCO_INTEREST:
                 continue
             xyxy = box.xyxy[0].cpu().numpy().tolist() if hasattr(box.xyxy[0], "cpu") else list(box.xyxy[0])
             detections.append({

@@ -79,6 +79,13 @@ ai_service/models/*.safetensors
 ai_service/models/weights/
 ai_service/models/cache/
 
+# ============ 训练产物 ============
+data/scb/
+data/.cache/
+runs/
+*.log
+wandb/
+
 # ============ 文件存储（本地）/ Uploads ============
 /data/
 uploads/
