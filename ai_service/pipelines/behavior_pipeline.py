@@ -54,18 +54,23 @@ class BehaviorPipeline(BasePipeline):
     def _load(self) -> None:
         from ultralytics import YOLO  # type: ignore
 
-        # 优先级：
-        # 1. 自训课堂行为模型（yolov8_classroom.pt）
-        # 2. 通用 yolov8n.pt（本地）
-        # 3. ultralytics 默认缓存/自动下载
-        classroom_model = AI_MODEL_DIR / "yolov8_classroom.pt"
-        generic_model = AI_MODEL_DIR / "yolov8n.pt"
+        # 按优先级搜索自训模型路径
+        project_root = AI_MODEL_DIR.parent.parent
+        candidates = [
+            AI_MODEL_DIR / "yolov8_classroom.pt",
+            AI_MODEL_DIR / "yolov8m_best.pt",
+            AI_MODEL_DIR / "yolov8_best.pt",
+            project_root / "yolov8m_best.pt",
+            project_root / "yolov8_best.pt",
+        ]
+        for path in candidates:
+            if path.exists():
+                logger.success(f"🎯 加载自训课堂行为模型：{path}")
+                self._model = YOLO(str(path))
+                self._auto_register_labels()
+                return
 
-        if classroom_model.exists():
-            logger.success(f"🎯 加载自训课堂行为模型：{classroom_model}")
-            self._model = YOLO(str(classroom_model))
-            self._load_custom_labels()
-            return
+        generic_model = AI_MODEL_DIR / "yolov8n.pt"
         if generic_model.exists():
             logger.info(f"加载通用 YOLOv8：{generic_model}")
             self._model = YOLO(str(generic_model))
@@ -73,21 +78,44 @@ class BehaviorPipeline(BasePipeline):
         logger.info("YOLOv8 权重不在本地，使用 ultralytics 默认缓存或自动下载")
         self._model = YOLO("yolov8n.pt")
 
-    def _load_custom_labels(self) -> None:
-        """加载自训模型的中文标签映射。"""
+    def _auto_register_labels(self) -> None:
+        """从加载的自训模型里读出类别名并生成中文映射。
+
+        支持三种来源：
+        1. ai_service/models/yolov8_classroom_labels.json（手动维护）
+        2. 模型本身的 names 属性（自动）
+        3. 内置英文→中文词典（用于标准词汇）
+        """
         import json
 
+        # 先尝试读外部映射文件
         labels_file = AI_MODEL_DIR / "yolov8_classroom_labels.json"
-        if not labels_file.exists():
-            return
+        if labels_file.exists():
+            try:
+                data = json.loads(labels_file.read_text(encoding="utf-8"))
+                cn_map = data.get("labels_cn") or {}
+                CLASSROOM_BEHAVIORS_CN.update(cn_map)
+                logger.info(f"自训模型类别中文映射已合并（来自 JSON）：{list(cn_map.keys())}")
+            except Exception as exc:  # noqa: BLE001
+                logger.warning(f"加载自训标签 JSON 失败：{exc}")
+
+        # 再自动读模型内的类别
         try:
-            data = json.loads(labels_file.read_text(encoding="utf-8"))
-            cn_map = data.get("labels_cn") or {}
-            # 合并到全局映射
-            CLASSROOM_BEHAVIORS_CN.update(cn_map)
-            logger.info(f"自训模型类别中文映射已合并：{list(cn_map.keys())}")
+            names = getattr(self._model, "names", None) or getattr(self._model.model, "names", None)
+            if not names:
+                return
+            auto_map = {}
+            for _, name in (names.items() if isinstance(names, dict) else enumerate(names)):
+                # 有 JSON 映射就跳过，否则用默认字典或保留原值
+                if name in CLASSROOM_BEHAVIORS_CN:
+                    continue
+                cn = _GUESS_CN_LABEL(name)
+                auto_map[name] = cn
+            if auto_map:
+                CLASSROOM_BEHAVIORS_CN.update(auto_map)
+                logger.info(f"自动识别模型类别 → 中文映射：{auto_map}")
         except Exception as exc:  # noqa: BLE001
-            logger.warning(f"加载自训标签失败：{exc}")
+            logger.debug(f"读取模型类别失败：{exc}")
 
     def _infer(self, image: np.ndarray, conf: float = 0.35) -> dict[str, Any]:
         """image: RGB ndarray。"""
@@ -154,6 +182,32 @@ def _summarize(detections: list[dict[str, Any]]) -> dict[str, int]:
         key = d["label_cn"] or d["label"]
         summary[key] = summary.get(key, 0) + 1
     return summary
+
+
+def _GUESS_CN_LABEL(en_name: str) -> str:
+    """尝试把英文类别名翻成中文，失败则返回原名。"""
+    key = str(en_name).lower().replace("-", "_").replace(" ", "_")
+    alias = {
+        "raising_hand": "举手", "raise_hand": "举手", "handup": "举手",
+        "hand_up": "举手", "hand_raising": "举手",
+        "writing": "写作", "write": "写作",
+        "reading": "阅读", "read": "阅读",
+        "listening": "听课", "listen": "听课",
+        "standing": "站立", "stand": "站立",
+        "sitting": "坐姿", "sit": "坐姿",
+        "talking": "交头接耳", "talk": "交头接耳",
+        "sleeping": "睡觉", "sleep": "睡觉",
+        "bowing_head": "低头", "bow_head": "低头", "bow": "低头", "head_down": "低头",
+        "head_up": "抬头",
+        "lying": "趴桌", "lean": "趴桌",
+        "phone": "玩手机", "using_phone": "玩手机", "use_phone": "玩手机",
+        "cell_phone": "玩手机",
+        "look_at_screen": "看屏幕", "look_screen": "看屏幕",
+        "person": "学生", "student": "学生",
+        "teacher": "教师",
+        "book": "书本", "laptop": "笔记本",
+    }
+    return alias.get(key, en_name)
 
 
 behavior_pipeline = BehaviorPipeline()

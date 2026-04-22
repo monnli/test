@@ -30,10 +30,25 @@ class EmotionPipeline(BasePipeline):
     name = "emotion"
 
     def _load(self) -> None:
+        """优先用 hsemotion-onnx（CPU/GPU 都快），失败回退到 hsemotion 官方 PyTorch 版。"""
+        model_name = "enet_b0_8_best_afew"
+        # 1) 优先 ONNX 版（体积小、推理快、无 PyTorch 依赖）
+        try:
+            from hsemotion_onnx.facial_emotions import HSEmotionRecognizer  # type: ignore
+
+            self._model = HSEmotionRecognizer(model_name=model_name)
+            logger.success(f"加载 hsemotion-onnx 版 ({model_name})")
+            return
+        except ImportError:
+            pass
+        except Exception as exc:  # noqa: BLE001
+            logger.debug(f"hsemotion-onnx 加载失败：{exc}")
+
+        # 2) 回退到 PyTorch 版
         from hsemotion.facial_emotions import HSEmotionRecognizer  # type: ignore
 
-        model_name = "enet_b0_8_best_afew"
         self._model = HSEmotionRecognizer(model_name=model_name, device=self.device)
+        logger.success(f"加载 hsemotion (PyTorch) 版 ({model_name})")
 
     def _infer(self, face_image: np.ndarray) -> dict[str, Any]:
         """face_image: RGB ndarray。"""
