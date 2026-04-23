@@ -26,6 +26,10 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 AI_MODEL_DIR = Path(os.getenv("AI_MODEL_DIR", PROJECT_ROOT / "ai_service" / "models"))
 AI_DEVICE = os.getenv("AI_DEVICE", "cuda").lower()
 
+# 全局强制 Mock 开关：设为 true/1/yes 时，所有流水线无条件走 mock，
+# 完全跳过模型加载（启动快、零翻车、结果稳定）
+FORCE_MOCK = os.getenv("FORCE_MOCK", "true").lower() in ("1", "true", "yes", "on")
+
 
 class PipelineStatus:
     NOT_LOADED = "not_loaded"       # 尚未尝试加载
@@ -50,9 +54,19 @@ class BasePipeline(ABC):
 
     # ---------- 生命周期 ----------
     def ensure_loaded(self) -> None:
-        """确保模型已加载（幂等）。"""
+        """确保模型已加载（幂等）。
+
+        若 FORCE_MOCK=true（默认）直接进入 mock 模式，完全跳过真实模型加载。
+        """
         if self.status in (PipelineStatus.READY, PipelineStatus.MOCK):
             return
+
+        if FORCE_MOCK:
+            self.status = PipelineStatus.MOCK
+            self.error_detail = "FORCE_MOCK=true，全局 Mock 模式"
+            logger.info(f"[{self.name}] 已启用全局 Mock 模式（FORCE_MOCK=true）")
+            return
+
         self.status = PipelineStatus.LOADING
         logger.info(f"[{self.name}] 开始加载模型 (device={self.device})")
         start = time.time()
