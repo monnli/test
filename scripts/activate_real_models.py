@@ -28,6 +28,9 @@ ENV_FILE = PROJECT_ROOT / ".env"
 
 DEFAULT_API_KEY = "sk-145a1165628741f686970c2922119f7d"
 DEFAULT_WEIGHTS_CANDIDATES = [
+    # 优先 AI 服务目录备份（切换过 mock 的场景）
+    PROJECT_ROOT / "ai_service" / "models" / "yolov8_classroom.pt.bak",
+    # 项目根目录的新训练权重
     PROJECT_ROOT / "yolov8m_best.pt",
     PROJECT_ROOT / "yolov8_best.pt",
     PROJECT_ROOT / "yolov8n_best.pt",
@@ -102,7 +105,11 @@ def generate_labels_json(weights: Path) -> None:
 
 
 def update_env_api_key(api_key: str) -> None:
-    """把 API key 写入 .env 的 DASHSCOPE_API_KEY。"""
+    """把 API key 写入 .env 的 DASHSCOPE_API_KEY。
+
+    若之前用 use_mock_models.py 把原值注释成了 "# [mock] DASHSCOPE_API_KEY=xxx"，
+    会自动清理掉这些残留注释。
+    """
     if not api_key:
         print("[SKIP] 未提供 API key")
         return
@@ -113,11 +120,15 @@ def update_env_api_key(api_key: str) -> None:
     new_lines = []
     replaced = False
     for line in lines:
-        if line.strip().startswith("DASHSCOPE_API_KEY="):
+        stripped = line.strip()
+        # 跳过 use_mock_models.py 遗留的注释行
+        if stripped.startswith("# [mock] DASHSCOPE_API_KEY="):
+            continue
+        if stripped.startswith("DASHSCOPE_API_KEY="):
             new_lines.append(f"DASHSCOPE_API_KEY={api_key}")
             replaced = True
-        else:
-            new_lines.append(line)
+            continue
+        new_lines.append(line)
     if not replaced:
         new_lines.append(f"DASHSCOPE_API_KEY={api_key}")
     ENV_FILE.write_text("\n".join(new_lines) + "\n", encoding="utf-8")
