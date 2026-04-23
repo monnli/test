@@ -107,21 +107,19 @@ const routes: RouteRecordRaw[] = [
           },
         ],
       },
-      // 课堂分析
+      // 课堂分析（默认跳摄像头墙；视频上传/笔记本摄像头页面从菜单移除但保留可直达）
       {
         path: 'classroom',
         meta: { title: '课堂分析' },
         children: [
-          { path: '', component: () => import('@/views/classroom/Videos.vue'), meta: { title: '视频库' } },
-          { path: 'upload', component: () => import('@/views/classroom/Upload.vue'), meta: { title: '上传视频' } },
-          { path: 'realtime', component: () => import('@/views/classroom/Realtime.vue'), meta: { title: '实时摄像头（笔记本）' } },
-          { path: 'video/:videoId', component: () => import('@/views/classroom/VideoTasks.vue'), meta: { title: '视频任务' } },
-          { path: 'task/:taskId', component: () => import('@/views/classroom/TaskDetail.vue'), meta: { title: '分析报告' } },
-          // M10 新增
+          { path: '', redirect: '/classroom/cameras' },
           { path: 'cameras', component: () => import('@/views/classroom/CameraWall.vue'), meta: { title: '摄像头墙' } },
           { path: 'camera-manage', component: () => import('@/views/classroom/CameraManage.vue'), meta: { title: '摄像头管理', requiresAdmin: true } },
           { path: 'live/:cameraId', component: () => import('@/views/classroom/CameraLive.vue'), meta: { title: '实时直播' } },
           { path: 'schedule', component: () => import('@/views/classroom/Schedule.vue'), meta: { title: '课表管理' } },
+          // 保留但不入菜单（Demo Mode / 历史链接兼容）
+          { path: 'video/:videoId', component: () => import('@/views/classroom/VideoTasks.vue'), meta: { title: '视频任务' } },
+          { path: 'task/:taskId', component: () => import('@/views/classroom/TaskDetail.vue'), meta: { title: '分析报告' } },
         ],
       },
       // 心理健康

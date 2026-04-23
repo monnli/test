@@ -150,9 +150,9 @@ def demo_script():
             {"path": "/classroom/live/1", "duration": 12000,
              "narrate": "实时直播：9 种行为识别 + 表情 + 学生身份，WebSocket 毫秒级回传"},
 
-            # —— 课堂分析历史与笔记本摄像头 ——
-            {"path": "/classroom", "duration": 5000, "narrate": "课堂视频库：上传+自动分析"},
-            {"path": "/classroom/realtime", "duration": 5000, "narrate": "笔记本摄像头：WebRTC 实时推流"},
+            # —— 课堂分析：不同摄像头的直播画面 ——
+            {"path": "/classroom/live/2", "duration": 6000,
+             "narrate": "切换摄像头：不同班级的课堂实时识别"},
 
             # —— 心理健康 ——
             {"path": "/psychology", "duration": 5000, "narrate": "心理健康：5 套国际标准量表"},
