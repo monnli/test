@@ -130,12 +130,18 @@ def create_app(config_class: type[BaseConfig] | None = None) -> Flask:
 
     # 本地存储静态文件访问（仅 STORAGE_BACKEND=local 时有效）
     if app.config.get("STORAGE_BACKEND", "local") == "local":
+        import mimetypes
+
         from flask import send_from_directory
 
         @app.route("/storage/<path:filename>")
         def storage_file(filename: str):
+            guessed, _ = mimetypes.guess_type(filename)
             return send_from_directory(
-                app.config["LOCAL_STORAGE_DIR"], filename, as_attachment=False
+                app.config["LOCAL_STORAGE_DIR"],
+                filename,
+                as_attachment=False,
+                mimetype=guessed or None,
             )
 
     logger.info(f"青苗守护者后端启动完成 (env={app.config['APP_ENV']})")

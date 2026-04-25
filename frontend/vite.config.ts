@@ -37,6 +37,10 @@ export default defineConfig(({ mode }) => {
           target: apiOrigin,
           changeOrigin: true,
         },
+        '/storage': {
+          target: apiOrigin,
+          changeOrigin: true,
+        },
         '/socket.io': {
           target: apiOrigin,
           changeOrigin: true,

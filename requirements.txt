@@ -1,0 +1,18 @@
+# 青苗守护者 · 根依赖清单（便于一键安装）
+#
+# 说明：
+# - 本项目包含 2 个 Python 服务：
+#   1) backend/   Flask 业务后端
+#   2) ai_service/ FastAPI AI 推理服务
+# - 如仅需启动某个服务，请分别安装对应目录下 requirements.txt
+#
+# 用法（在项目根目录执行）：
+#   pip install -r requirements.txt
+#
+# 注意：
+# - AI 服务的“真实模型依赖”在 ai_service/requirements.txt 中默认注释，
+#   若需要真实推理（YOLO/InsightFace/HSEmotion/MediaPipe），请按文档启用。
+
+-r backend/requirements.txt
+-r ai_service/requirements.txt
+

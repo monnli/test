@@ -210,10 +210,20 @@ def get_visible_class_ids(user: User) -> list[int] | None:
     scope = compute_data_scope(user)
     if scope.is_full:
         return None
-    if scope.class_ids is None:
-        # 没有任何班级数据权限
-        return []
-    return sorted(scope.class_ids)
+    if scope.class_ids is not None:
+        return sorted(scope.class_ids)
+
+    # 仅有年级范围（例如年级组长）：按年级展开到班级
+    if scope.grade_ids:
+        rows = (
+            db.session.query(Clazz.id)
+            .filter(Clazz.grade_id.in_(scope.grade_ids), Clazz.is_deleted.is_(False))
+            .all()
+        )
+        return [r[0] for r in rows]
+
+    # 没有任何班级数据权限
+    return []
 
 
 def get_visible_student_ids(user: User) -> list[int] | None:
@@ -228,6 +238,23 @@ def get_visible_student_ids(user: User) -> list[int] | None:
             )
             return [r[0] for r in rows]
         return None
+    if scope.class_ids is None and scope.grade_ids:
+        # 年级范围：展开到班级再取学生
+        class_rows = (
+            db.session.query(Clazz.id)
+            .filter(Clazz.grade_id.in_(scope.grade_ids), Clazz.is_deleted.is_(False))
+            .all()
+        )
+        class_ids = [r[0] for r in class_rows]
+        if not class_ids:
+            return []
+        rows = (
+            db.session.query(Student.id)
+            .filter(Student.class_id.in_(class_ids), Student.is_deleted.is_(False))
+            .all()
+        )
+        return [r[0] for r in rows]
+
     if not scope.class_ids:
         return []
     rows = (

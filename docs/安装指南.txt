@@ -1,0 +1,51 @@
+0) 目标电脑需要装什么
+	MySQL 8.x（服务已启动）
+	Python 3.10+（建议装 Miniconda/Anaconda；你们 start_all.bat 默认尝试激活 kt_env）
+	Node.js 18+（装完确认 node -v、npm -v）
+	建议把项目放到英文路径（减少工具链踩坑）。
+
+1) .env 推荐配置（直接照抄改密码即可）（已经有了的）
+	把项目根目录 .env.example 复制为 .env，然后重点改成这样（其余可保持默认）：
+	# MySQL（本机）
+	MYSQL_HOST=127.0.0.1
+	MYSQL_PORT=3306
+	MYSQL_USER=qingmiao
+	MYSQL_PASSWORD=qingmiao123
+	MYSQL_DATABASE=qingmiao_guardian
+	# 前端只访问本机后端（避免 localhost/IPv6 差异）
+	VITE_API_BASE_URL=http://127.0.0.1:5000/api
+	VITE_WS_BASE_URL=ws://127.0.0.1:5000
+	# AI 服务（本机）
+	AI_SERVICE_URL=http://127.0.0.1:8000
+	AI_DEVICE=cpu
+	# 无 GPU 演示机：强烈建议先 Mock（流程全、最稳）
+	FORCE_MOCK=true
+	# 通义千问（可选：不填也能演示；填了文本/对话更“真”）
+	# DASHSCOPE_API_KEY=sk-xxxx
+	你只需要把 MYSQL_USER / MYSQL_PASSWORD / MYSQL_DATABASE 改成你本机 MySQL 实际账号即可。
+
+2) MySQL 一次性建库授权（示例）
+	CREATE DATABASE IF NOT EXISTS qingmiao_guardian DEFAULT CHARACTER SET utf8mb4;
+	CREATE USER IF NOT EXISTS 'qingmiao'@'localhost' IDENTIFIED BY 'qingmiao123';
+	GRANT ALL PRIVILEGES ON qingmiao_guardian.* TO 'qingmiao'@'localhost';
+	FLUSH PRIVILEGES;
+3) 安装依赖（一次性）
+	在项目根目录 CMD：
+
+	cd backend
+	python -m pip install -r requirements.txt
+	cd ..\ai_service
+	python -m pip install -r requirements.txt
+	cd ..\frontend
+	npm install
+4) 初始化演示数据（一次性）
+	scripts\init_demo.bat
+5) 启动（每次演示）
+	scripts\start_all.bat
+	浏览器打开：http://127.0.0.1:5173（或 http://localhost:5173）
+
+	默认账号：admin / admin123
+
+	无 GPU 的关键说明（避免你踩坑）
+	FORCE_MOCK=true：不装大模型也能完整演示（最适合比赛机）。
+	如果你一定要“真推理”：再按 docs/CPU降级部署说明.md 逐步启用 ai_service/requirements.txt 里被注释的依赖；无 GPU 会很慢，不建议答辩现场硬上。

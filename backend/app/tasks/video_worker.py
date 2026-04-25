@@ -201,30 +201,31 @@ def _add_emotion(task: AnalysisTask, video: Video, ts: float, em: dict) -> None:
 
 
 def _mock_behavior() -> dict:
-    n_person = random.randint(20, 35)
-    n_hand_up = random.randint(0, 3)
-    n_phone = 1 if random.random() < 0.08 else 0
+    """与 AI 行为流水线标准八类一致（mock 演示）。"""
+    eight = (
+        "低头写字",
+        "低头看书",
+        "抬头听课",
+        "转头",
+        "举手",
+        "站立",
+        "小组讨论",
+        "教师指导",
+    )
+    n = random.randint(3, 8)
     detections: list[dict] = []
-    for _ in range(n_person):
+    for _ in range(n):
+        cn = random.choice(eight)
         detections.append({
-            "label": "person",
-            "label_cn": "学生",
-            "confidence": random.uniform(0.7, 0.98),
-            "bbox": [0, 0, 100, 160],
+            "label": cn,
+            "label_cn": cn,
+            "confidence": random.uniform(0.65, 0.92),
+            "bbox": [random.randint(0, 80), random.randint(0, 60), 120, 200],
         })
-    for _ in range(n_hand_up):
-        detections.append({
-            "label": "hand_up",
-            "label_cn": "举手",
-            "confidence": random.uniform(0.65, 0.9),
-            "bbox": [0, 0, 60, 80],
-        })
-    if n_phone:
-        detections.append({
-            "label": "cell phone", "label_cn": "手机",
-            "confidence": 0.72, "bbox": [0, 0, 40, 30],
-        })
-    return {"detections": detections, "summary": {}}
+    summary: dict[str, int] = {}
+    for d in detections:
+        summary[d["label_cn"]] = summary.get(d["label_cn"], 0) + 1
+    return {"detections": detections, "summary": summary}
 
 
 def _mock_emotion() -> dict:

@@ -9,6 +9,7 @@ from datetime import date, datetime, timedelta
 from sqlalchemy import func
 
 from ..extensions import db
+from ..services.video_service import BEHAVIOR_EIGHT_CN, _normalize_behavior_cn
 from ..models import (
     AIConversation,
     Alert,
@@ -139,25 +140,39 @@ def emotion_overview_30d() -> list[dict]:
 
 
 def behavior_distribution_today() -> dict:
-    """今日各类行为分布。"""
+    """今日各类行为分布（标准八类；历史 label 会归一）。"""
     today = date.today()
     rows = (
-        db.session.query(BehaviorRecord.label_cn, func.count(BehaviorRecord.id))
+        db.session.query(
+            BehaviorRecord.label_cn,
+            BehaviorRecord.label,
+            func.count(BehaviorRecord.id),
+        )
         .filter(func.date(BehaviorRecord.created_at) == today)
-        .group_by(BehaviorRecord.label_cn)
+        .group_by(BehaviorRecord.label_cn, BehaviorRecord.label)
         .all()
     )
-    if not rows:
-        # mock 演示数据
+    merged: dict[str, int] = {cn: 0 for cn in BEHAVIOR_EIGHT_CN}
+    for label_cn, label, cnt in rows:
+        nk = _normalize_behavior_cn(label_cn, label)
+        merged[nk] = merged.get(nk, 0) + int(cnt)
+
+    items = [{"name": k, "value": v} for k, v in merged.items() if v > 0]
+    if not items:
+        # 无今日记录时的演示数据（与课堂标准八类一致）
         return {
             "items": [
-                {"name": "学生", "value": 1850},
-                {"name": "举手", "value": 132},
-                {"name": "趴桌", "value": 18},
-                {"name": "玩手机", "value": 6},
+                {"name": "抬头听课", "value": 520},
+                {"name": "低头写字", "value": 180},
+                {"name": "低头看书", "value": 140},
+                {"name": "举手", "value": 95},
+                {"name": "站立", "value": 72},
+                {"name": "转头", "value": 48},
+                {"name": "小组讨论", "value": 36},
+                {"name": "教师指导", "value": 24},
             ]
         }
-    return {"items": [{"name": r[0], "value": r[1]} for r in rows]}
+    return {"items": items}
 
 
 def emotion_distribution_today() -> dict:

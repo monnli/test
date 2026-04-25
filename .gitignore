@@ -79,6 +79,16 @@ ai_service/models/*.safetensors
 ai_service/models/weights/
 ai_service/models/cache/
 
+# 常见：把训练权重/演示视频放在仓库根目录（避免误提交大文件）
+/best.pt
+/001.mp4
+/002.mp4
+/003.mp4
+/*.mp4
+/*.jpg
+/*.jpeg
+qingmiao-guardian*.tar
+
 # ============ 训练产物 ============
 data/scb/
 data/.cache/

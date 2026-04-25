@@ -1,14 +1,10 @@
 """课堂行为检测流水线（YOLOv8）。
 
-检测类别（基于 COCO + 自定义映射）：
-- 人（person）
-- 举手（hand_up）← 通过姿态关键点派生
-- 趴桌（lying）← 通过姿态+位置派生
-- 坐立（sitting / standing）← 姿态派生
-- 玩手机（using_phone）← COCO: cell phone + 人重合判定
-- 睡觉（sleeping）← 姿态派生
+标准课堂 **8 类**（与自训 best.pt 中文类别一致）：
+低头写字、低头看书、抬头听课、转头、举手、站立、小组讨论、教师指导。
 
-M2 阶段实现简单版：只做 person + cell phone 检测；复杂行为的分类放 M3 阶段。
+- 自训模型：直接使用模型 `names`（可为中文），配合 `CLASSROOM_BEHAVIORS_CN` 与 `_GUESS_CN_LABEL`。
+- 通用 COCO 回退：将 person / book / laptop / cell phone 等映射到上述八类中最接近的一项。
 """
 
 from __future__ import annotations
@@ -31,20 +27,46 @@ COCO_INTEREST = {
     73: "book",
 }
 
-CLASSROOM_BEHAVIORS_CN = {
-    "person": "学生",
-    "person_head_up": "抬头",
-    "person_head_down": "低头",
+# 标准八类中文（训练集可直接用这八个字符串作类别名）
+BEHAVIOR_CLASSES_CN: tuple[str, ...] = (
+    "低头写字",
+    "低头看书",
+    "抬头听课",
+    "转头",
+    "举手",
+    "站立",
+    "小组讨论",
+    "教师指导",
+)
+
+CLASSROOM_BEHAVIORS_CN: dict[str, str] = {
+    **{cn: cn for cn in BEHAVIOR_CLASSES_CN},
+    # 历史 / COCO / 常见英文别名 → 标准八类
+    "person": "抬头听课",
+    "person_head_up": "抬头听课",
+    "person_head_down": "低头看书",
+    "student": "抬头听课",
     "hand_up": "举手",
-    "lying": "趴桌",
-    "sitting": "坐姿",
+    "raising_hand": "举手",
+    "raise_hand": "举手",
+    "hand_raise": "举手",
     "standing": "站立",
-    "using_phone": "玩手机",
-    "sleeping": "睡觉",
-    "talking": "交头接耳",
-    "cell phone": "手机",
-    "book": "书本",
-    "laptop": "笔记本",
+    "stand": "站立",
+    "sitting": "抬头听课",
+    "sit": "抬头听课",
+    "lying": "低头写字",
+    "sleeping": "低头看书",
+    "talking": "小组讨论",
+    "discussion": "小组讨论",
+    "group_discussion": "小组讨论",
+    "teacher": "教师指导",
+    "using_phone": "低头看书",
+    "cell phone": "低头看书",
+    "cell_phone": "低头看书",
+    "book": "低头看书",
+    "laptop": "低头写字",
+    "mouse": "低头写字",
+    "keyboard": "低头写字",
 }
 
 
@@ -57,6 +79,9 @@ class BehaviorPipeline(BasePipeline):
         # 按优先级搜索自训模型路径
         project_root = AI_MODEL_DIR.parent.parent
         candidates = [
+            # 用户放在仓库根目录的权重（比赛/本地训练最常见）
+            project_root / "best.pt",
+            # 兼容历史命名
             AI_MODEL_DIR / "yolov8_classroom.pt",
             AI_MODEL_DIR / "yolov8m_best.pt",
             AI_MODEL_DIR / "yolov8_best.pt",
@@ -138,9 +163,10 @@ class BehaviorPipeline(BasePipeline):
             if not is_custom and cls_id not in COCO_INTEREST:
                 continue
             xyxy = box.xyxy[0].cpu().numpy().tolist() if hasattr(box.xyxy[0], "cpu") else list(box.xyxy[0])
+            cn = CLASSROOM_BEHAVIORS_CN.get(label) or _GUESS_CN_LABEL(label)
             detections.append({
                 "label": label,
-                "label_cn": CLASSROOM_BEHAVIORS_CN.get(label, label),
+                "label_cn": cn,
                 "confidence": float(box.conf.item()) if hasattr(box.conf, "item") else float(box.conf),
                 "bbox": xyxy,
             })
@@ -153,25 +179,20 @@ class BehaviorPipeline(BasePipeline):
         h, w = image.shape[:2]
         seed = int(hashlib.md5(image.tobytes()).hexdigest()[:8], 16)
         rng = np.random.default_rng(seed)
-        n = int(rng.integers(2, 6))
+        n = int(rng.integers(2, 5))
         detections: list[dict[str, Any]] = []
+        labels_pool = list(BEHAVIOR_CLASSES_CN)
         for _ in range(n):
-            x1 = rng.uniform(0, w * 0.6)
-            y1 = rng.uniform(0, h * 0.6)
-            x2 = x1 + rng.uniform(60, 150)
-            y2 = y1 + rng.uniform(80, 200)
+            x1 = rng.uniform(0, w * 0.55)
+            y1 = rng.uniform(0, h * 0.55)
+            x2 = x1 + rng.uniform(60, 160)
+            y2 = y1 + rng.uniform(70, 200)
+            cn = str(rng.choice(labels_pool))
             detections.append({
-                "label": "person",
-                "label_cn": "学生",
-                "confidence": float(rng.uniform(0.6, 0.95)),
+                "label": cn,
+                "label_cn": cn,
+                "confidence": float(rng.uniform(0.62, 0.93)),
                 "bbox": [float(x1), float(y1), float(min(x2, w)), float(min(y2, h))],
-            })
-        if rng.random() < 0.3:
-            detections.append({
-                "label": "cell phone",
-                "label_cn": "手机",
-                "confidence": 0.72,
-                "bbox": [w * 0.2, h * 0.5, w * 0.25, h * 0.55],
             })
         return {"detections": detections, "summary": _summarize(detections), "_mock": True}
 
@@ -185,27 +206,68 @@ def _summarize(detections: list[dict[str, Any]]) -> dict[str, int]:
 
 
 def _GUESS_CN_LABEL(en_name: str) -> str:
-    """尝试把英文类别名翻成中文，失败则返回原名。"""
-    key = str(en_name).lower().replace("-", "_").replace(" ", "_")
+    """尝试把英文类别名翻成标准八类中文，失败则返回原名。"""
+    raw = str(en_name).strip()
+    if any("\u4e00" <= ch <= "\u9fff" for ch in raw):
+        return raw
+
+    key = raw.lower().replace("-", "_").replace(" ", "_")
     alias = {
-        "raising_hand": "举手", "raise_hand": "举手", "handup": "举手",
-        "hand_up": "举手", "hand_raising": "举手",
-        "writing": "写作", "write": "写作",
-        "reading": "阅读", "read": "阅读",
-        "listening": "听课", "listen": "听课",
-        "standing": "站立", "stand": "站立",
-        "sitting": "坐姿", "sit": "坐姿",
-        "talking": "交头接耳", "talk": "交头接耳",
-        "sleeping": "睡觉", "sleep": "睡觉",
-        "bowing_head": "低头", "bow_head": "低头", "bow": "低头", "head_down": "低头",
-        "head_up": "抬头",
-        "lying": "趴桌", "lean": "趴桌",
-        "phone": "玩手机", "using_phone": "玩手机", "use_phone": "玩手机",
-        "cell_phone": "玩手机",
-        "look_at_screen": "看屏幕", "look_screen": "看屏幕",
-        "person": "学生", "student": "学生",
-        "teacher": "教师",
-        "book": "书本", "laptop": "笔记本",
+        "head_down_writing": "低头写字",
+        "writing_head_down": "低头写字",
+        "write_head_down": "低头写字",
+        "writing": "低头写字",
+        "write": "低头写字",
+        "head_down_reading": "低头看书",
+        "reading_head_down": "低头看书",
+        "read_head_down": "低头看书",
+        "reading": "低头看书",
+        "read": "低头看书",
+        "head_up_listening": "抬头听课",
+        "listen_head_up": "抬头听课",
+        "listening_head_up": "抬头听课",
+        "listening": "抬头听课",
+        "listen": "抬头听课",
+        "turn_head": "转头",
+        "turning_head": "转头",
+        "look_around": "转头",
+        "raising_hand": "举手",
+        "raise_hand": "举手",
+        "handup": "举手",
+        "hand_up": "举手",
+        "hand_raising": "举手",
+        "hand_raise": "举手",
+        "standing": "站立",
+        "stand": "站立",
+        "group_discussion": "小组讨论",
+        "discussion": "小组讨论",
+        "group_talk": "小组讨论",
+        "talking": "小组讨论",
+        "talk": "小组讨论",
+        "teacher_guidance": "教师指导",
+        "teacher_guide": "教师指导",
+        "teacher_instruction": "教师指导",
+        "teacher": "教师指导",
+        # COCO / 旧版兼容 → 八类
+        "person": "抬头听课",
+        "student": "抬头听课",
+        "sitting": "抬头听课",
+        "sit": "抬头听课",
+        "lying": "低头写字",
+        "lean": "低头写字",
+        "sleeping": "低头看书",
+        "sleep": "低头看书",
+        "bowing_head": "低头看书",
+        "bow_head": "低头看书",
+        "bow": "低头看书",
+        "head_down": "低头看书",
+        "head_up": "抬头听课",
+        "phone": "低头看书",
+        "using_phone": "低头看书",
+        "use_phone": "低头看书",
+        "cell_phone": "低头看书",
+        "book": "低头看书",
+        "laptop": "低头写字",
     }
     return alias.get(key, en_name)
 

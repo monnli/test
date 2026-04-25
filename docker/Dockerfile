@@ -6,6 +6,7 @@
 
 # -------- Stage 1: 前端构建 --------
 FROM node:20-alpine AS frontend-builder
+#FROM docker.mirrors.sjtug.sjtu.edu.cn/library/node:20-alpine AS frontend-builder
 
 WORKDIR /app
 COPY frontend/package.json frontend/package-lock.json* ./
@@ -18,6 +19,7 @@ RUN npm run build
 
 # -------- Stage 2: Python 运行时 + Nginx + Supervisor --------
 FROM python:3.10-slim
+#FROM docker.mirrors.sjtug.sjtu.edu.cn/library/python:3.10-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
@@ -25,6 +27,11 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
     TZ=Asia/Shanghai \
     DEBIAN_FRONTEND=noninteractive
+
+# 系统依赖 + Nginx + Supervisor（同时跑多进程）
+# ==================== 替换国内阿里云 apt 源 ====================
+RUN sed -i 's/deb.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources \
+    && sed -i 's/security.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources
 
 # 系统依赖 + Nginx + Supervisor（同时跑多进程）
 RUN apt-get update && apt-get install -y --no-install-recommends \

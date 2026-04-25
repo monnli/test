@@ -57,6 +57,10 @@ docker compose logs -f qingmiao
 
 完整 16 个演示账号见 [M1-完成清单.md](M1-完成清单.md)。
 
+> 权限提示：
+> - 学校管理员账号只管理本校数据；
+> - **学校管理（新建/编辑/删除学校）仅超级管理员可用**（默认演示账号不开放该入口）。
+
 ### 5. 停止 / 重启
 ```bash
 # 停止
@@ -202,7 +206,7 @@ docker compose up -d     # 重新启动并初始化
 - [ ] 进入 http://localhost/dashboard 有数据
 - [ ] 进入 http://localhost/enhance/cluster 能看到聚类散点图
 - [ ] 进入 http://localhost/ethics 能看到负责任 AI 仪表盘
-- [ ] 按 **F9** 能启动 Demo Mode
+- [ ] 按 **F9** 能启动 Demo Mode；**空格** 可暂停/继续；长页是否自动滚动（依赖前端构建版本）
 
 如果某项失败，查看 `docker compose logs -f qingmiao` 排查。
 

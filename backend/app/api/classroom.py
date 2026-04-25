@@ -38,6 +38,30 @@ def upload_video():
     )
 
 
+@classroom_bp.delete("/videos/<int:video_id>")
+@login_required
+def remove_video(video_id: int):
+    svc.delete_video(video_id)
+    return ok(None, "已删除")
+
+
+@classroom_bp.post("/videos/<int:video_id>/detect-frame")
+@login_required
+def detect_video_frame(video_id: int):
+    """回放页实时识别：multipart 字段 `file` 为当前帧 JPEG/PNG。"""
+    conf = float(request.args.get("conf", 0.35))
+    file = request.files.get("file")
+    img = file.read() if file else b""
+    payload = svc.detect_frame_from_upload(video_id, img, conf=conf)
+    t_raw = request.form.get("time") or request.args.get("time")
+    if t_raw is not None and t_raw != "":
+        try:
+            payload = {**payload, "current_time": float(t_raw)}
+        except (TypeError, ValueError):
+            pass
+    return ok(payload)
+
+
 @classroom_bp.post("/videos/<int:video_id>/analyze")
 @login_required
 def start_analyze(video_id: int):

@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import date, datetime, time as dtime
 from typing import Any
 
-from sqlalchemy import and_, or_
+from sqlalchemy import and_, or_, tuple_
 
 from ..extensions import db
 from ..models import Camera, ClassSchedule, Clazz, Subject, Teacher
@@ -164,6 +164,10 @@ def list_schedules(
     class_id: int | None = None,
     teacher_id: int | None = None,
     weekday: int | None = None,
+    class_ids: list[int] | None = None,
+    subject_filters: set[tuple[int, int]] | None = None,
+    all_subjects_in_class_ids: set[int] | None = None,
+    is_full: bool = False,
 ) -> list[dict]:
     q = db.session.query(ClassSchedule).filter(ClassSchedule.is_deleted.is_(False))
     if class_id:
@@ -172,6 +176,25 @@ def list_schedules(
         q = q.filter_by(teacher_id=teacher_id)
     if weekday:
         q = q.filter_by(weekday=weekday)
+
+    # 数据范围过滤（非管理员/非超管）
+    if not is_full:
+        if class_ids is not None:
+            if not class_ids:
+                return []
+            q = q.filter(ClassSchedule.class_id.in_(class_ids))
+
+        # 科任老师：仅允许（班级×科目）授权；若该班级在 all_subjects_in_class_ids，则允许该班级任意科目
+        all_subjects_in_class_ids = all_subjects_in_class_ids or set()
+        subject_filters = subject_filters or set()
+        if subject_filters or all_subjects_in_class_ids:
+            allowed = []
+            if all_subjects_in_class_ids:
+                allowed.append(ClassSchedule.class_id.in_(list(all_subjects_in_class_ids)))
+            if subject_filters:
+                allowed.append(tuple_(ClassSchedule.class_id, ClassSchedule.subject_id).in_(list(subject_filters)))
+            q = q.filter(or_(*allowed))
+
     rows = q.order_by(ClassSchedule.weekday, ClassSchedule.period).all()
     return [serialize_schedule(s) for s in rows]
 

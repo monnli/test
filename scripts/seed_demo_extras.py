@@ -233,7 +233,16 @@ def main() -> int:
                 finished_at=datetime.utcnow() - timedelta(hours=1),
                 summary=json.dumps(
                     {
-                        "behavior_summary": {"学生": 800, "举手": 35, "趴桌": 12, "玩手机": 3},
+                        "behavior_summary": {
+                            "抬头听课": 420,
+                            "低头写字": 180,
+                            "低头看书": 140,
+                            "举手": 95,
+                            "站立": 72,
+                            "转头": 48,
+                            "小组讨论": 36,
+                            "教师指导": 24,
+                        },
                         "emotion_summary": {"中性": 320, "高兴": 200, "专注": 150, "疲惫": 30},
                         "total_frames": 900,
                         "dominant_emotion": "中性",
@@ -244,25 +253,32 @@ def main() -> int:
             db.session.add(task)
             db.session.flush()
 
+            # 标准课堂八类（与 YOLO 中文类别一致）
+            behavior_eight = [
+                ("低头写字", "低头写字"),
+                ("低头看书", "低头看书"),
+                ("抬头听课", "抬头听课"),
+                ("转头", "转头"),
+                ("举手", "举手"),
+                ("站立", "站立"),
+                ("小组讨论", "小组讨论"),
+                ("教师指导", "教师指导"),
+            ]
+            b_weights = [0.18, 0.16, 0.22, 0.08, 0.12, 0.08, 0.09, 0.07]
+
             for i in range(60):
                 ts = i * 30.0
-                cnt = random.randint(20, 30)
+                cnt = random.randint(18, 32)
                 for _ in range(cnt):
+                    label_cn, label = random.choices(behavior_eight, weights=b_weights, k=1)[0]
                     db.session.add(
                         BehaviorRecord(
                             task_id=task.id,
                             video_id=video.id,
                             frame_time=ts,
-                            label="person",
-                            label_cn="学生",
-                            confidence=0.9,
-                        )
-                    )
-                if random.random() < 0.4:
-                    db.session.add(
-                        BehaviorRecord(
-                            task_id=task.id, video_id=video.id, frame_time=ts,
-                            label="hand_up", label_cn="举手", confidence=0.78,
+                            label=label,
+                            label_cn=label_cn,
+                            confidence=random.uniform(0.65, 0.93),
                         )
                     )
                 # 表情

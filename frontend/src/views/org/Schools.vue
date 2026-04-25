@@ -9,7 +9,7 @@
         @keyup.enter="load"
       />
       <el-button @click="load">查询</el-button>
-      <el-button type="primary" :icon="Plus" @click="openDialog()">新建学校</el-button>
+      <el-button v-if="isSuper" type="primary" :icon="Plus" @click="openDialog()">新建学校</el-button>
     </div>
 
     <el-table :data="items" v-loading="loading" stripe>
@@ -62,15 +62,18 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 
 import { listSchools, createSchool, updateSchool, deleteSchool, type School } from '@/api/orgs'
+import { useUserStore } from '@/stores/user'
 
 const items = ref<School[]>([])
 const loading = ref(false)
 const keyword = ref('')
+const userStore = useUserStore()
+const isSuper = computed(() => Boolean(userStore.userInfo?.is_super))
 
 const dialogVisible = ref(false)
 const editing = ref<School | null>(null)
@@ -105,6 +108,10 @@ function resetForm() {
 }
 
 function openDialog(row?: School) {
+  if (!isSuper.value && !row) {
+    ElMessage.warning('仅超级管理员可新建学校')
+    return
+  }
   editing.value = row || null
   resetForm()
   if (row) Object.assign(form, row)

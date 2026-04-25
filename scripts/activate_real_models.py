@@ -26,11 +26,12 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 AI_MODEL_DIR = PROJECT_ROOT / "ai_service" / "models"
 ENV_FILE = PROJECT_ROOT / ".env"
 
-DEFAULT_API_KEY = "sk-145a1165628741f686970c2922119f7d"
+DEFAULT_API_KEY = None
 DEFAULT_WEIGHTS_CANDIDATES = [
     # 优先 AI 服务目录备份（切换过 mock 的场景）
     PROJECT_ROOT / "ai_service" / "models" / "yolov8_classroom.pt.bak",
     # 项目根目录的新训练权重
+    PROJECT_ROOT / "best.pt",
     PROJECT_ROOT / "yolov8m_best.pt",
     PROJECT_ROOT / "yolov8_best.pt",
     PROJECT_ROOT / "yolov8n_best.pt",
@@ -86,6 +87,25 @@ def generate_labels_json(weights: Path) -> None:
         "person": "学生", "student": "学生",
         "teacher": "教师",
         "book": "书本", "laptop": "笔记本",
+        # 课堂 8 行为（常见英文别名；若你的类别名不同，请改 JSON）
+        "head_down_writing": "低头写字",
+        "writing_head_down": "低头写字",
+        "write_head_down": "低头写字",
+        "head_down_reading": "低头看书",
+        "reading_head_down": "低头看书",
+        "read_head_down": "低头看书",
+        "head_up_listening": "抬头听课",
+        "listen_head_up": "抬头听课",
+        "listening_head_up": "抬头听课",
+        "turn_head": "转头",
+        "turning_head": "转头",
+        "look_around": "转头",
+        "group_discussion": "小组讨论",
+        "discussion": "小组讨论",
+        "group_talk": "小组讨论",
+        "teacher_guidance": "教师指导",
+        "teacher_guide": "教师指导",
+        "teacher_instruction": "教师指导",
     }
     labels_cn = {}
     for name in names:
@@ -160,7 +180,11 @@ def check_imports() -> None:
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--yolo-weights", default=None, help="YOLO 权重路径（默认扫描项目根目录）")
-    parser.add_argument("--api-key", default=DEFAULT_API_KEY)
+    parser.add_argument(
+        "--api-key",
+        default=DEFAULT_API_KEY,
+        help="通义千问 API Key（可选；不提供则跳过写入 .env）",
+    )
     args = parser.parse_args()
 
     print("=" * 60)
@@ -191,7 +215,10 @@ def main():
 
     # 2. 写 API key
     print()
-    update_env_api_key(args.api_key)
+    if args.api_key:
+        update_env_api_key(args.api_key)
+    else:
+        print("[SKIP] 未提供 --api-key，跳过写入 DASHSCOPE_API_KEY（如需文本/对话真实推理可自行配置）")
 
     # 3. 依赖检查
     check_imports()
@@ -202,13 +229,14 @@ def main():
     print("✅ 全部完成")
     print()
     print("下一步：")
+    print("  0. 确认 `.env`：FORCE_MOCK=false（否则行为检测仍会走 mock）")
     print("  1. 重启 AI 服务：")
     print("       cd ai_service && python server.py")
     print("     成功时应看到：")
     print("       🎯 加载自训课堂行为模型：.../yolov8_classroom.pt")
     print("       加载 hsemotion-onnx 版 (enet_b0_8_best_afew)")
     print()
-    print("  2. 重启后端（读取新 API key）：")
+    print("  2. 重启后端：")
     print("       cd backend && python run.py")
     print()
     print("  3. 浏览器打开 /system/ai 监控页，点每个流水线「加载」按钮")

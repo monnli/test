@@ -13,8 +13,10 @@ from ..utils.permissions import (
     get_current_user,
     get_visible_class_ids,
     login_required,
+    roles_required,
 )
 from ..utils.response import ok
+from ..models import ROLE_SUPER_ADMIN
 
 orgs_bp = Blueprint("orgs", __name__)
 
@@ -31,19 +33,19 @@ def get_schools():
 
 
 @orgs_bp.post("/schools")
-@admin_required
+@roles_required(ROLE_SUPER_ADMIN)
 def add_school():
     return ok(svc.create_school(request.get_json() or {}), "创建成功")
 
 
 @orgs_bp.put("/schools/<int:school_id>")
-@admin_required
+@roles_required(ROLE_SUPER_ADMIN)
 def edit_school(school_id: int):
     return ok(svc.update_school(school_id, request.get_json() or {}), "更新成功")
 
 
 @orgs_bp.delete("/schools/<int:school_id>")
-@admin_required
+@roles_required(ROLE_SUPER_ADMIN)
 def remove_school(school_id: int):
     svc.delete_school(school_id)
     return ok(message="已删除")

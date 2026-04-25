@@ -27,12 +27,13 @@
         </template>
       </el-table-column>
       <el-table-column prop="created_at" label="上传时间" width="170" />
-      <el-table-column label="操作" width="240" fixed="right">
+      <el-table-column label="操作" width="320" fixed="right">
         <template #default="{ row }">
           <el-button text type="primary" @click="onAnalyze(row)">分析</el-button>
           <el-button text type="success" @click="$router.push(`/classroom/video/${row.id}`)">
             分析记录
           </el-button>
+          <el-button text type="danger" @click="onDelete(row)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -54,10 +55,10 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { Upload, VideoCamera } from '@element-plus/icons-vue'
 
-import { listVideos, startAnalyze, type VideoItem } from '@/api/classroom'
+import { deleteVideo, listVideos, startAnalyze, type VideoItem } from '@/api/classroom'
 
 const router = useRouter()
 const items = ref<VideoItem[]>([])
@@ -88,6 +89,21 @@ async function onAnalyze(row: VideoItem) {
   const task = await startAnalyze(row.id)
   ElMessage.success('分析任务已提交')
   router.push(`/classroom/task/${task.id}`)
+}
+
+async function onDelete(row: VideoItem) {
+  try {
+    await ElMessageBox.confirm(`确定删除「${row.title}」？将同时删除文件及关联分析记录。`, '删除视频', {
+      type: 'warning',
+      confirmButtonText: '删除',
+      cancelButtonText: '取消',
+    })
+  } catch {
+    return
+  }
+  await deleteVideo(row.id)
+  ElMessage.success('已删除')
+  load()
 }
 
 onMounted(load)

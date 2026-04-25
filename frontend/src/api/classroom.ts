@@ -36,6 +36,21 @@ export interface TimelinePoint {
   [key: string]: number
 }
 
+export interface BehaviorDetection {
+  label: string
+  label_cn: string
+  confidence: number
+  bbox: [number, number, number, number]
+}
+
+export interface BehaviorDetectResult {
+  detections: BehaviorDetection[]
+  summary: Record<string, number>
+  current_time?: number
+  _error?: string
+  _mock?: boolean
+}
+
 export interface TaskReport {
   task: AnalysisTaskItem
   video: VideoItem
@@ -45,6 +60,7 @@ export interface TaskReport {
     hand_up_count: number
     phone_count: number
     engagement_score: number
+    behavior_by_class?: Record<string, number>
   }
   behavior_timeline: TimelinePoint[]
   emotion_timeline: TimelinePoint[]
@@ -79,3 +95,27 @@ export const getTask = (taskId: number) =>
 
 export const getTaskReport = (taskId: number) =>
   request<TaskReport>({ url: `/classroom/tasks/${taskId}/report`, method: 'get' })
+
+export const deleteVideo = (videoId: number) =>
+  request<unknown>({ url: `/classroom/videos/${videoId}`, method: 'delete' })
+
+/** 播放/回放页抽帧 YOLO 识别（勿手写 Content-Type，便于 multipart boundary） */
+export const detectVideoFrame = (
+  videoId: number,
+  blob: Blob,
+  currentTime?: number,
+  conf = 0.35,
+  signal?: AbortSignal,
+) => {
+  const fd = new FormData()
+  fd.append('file', blob, 'frame.jpg')
+  if (currentTime !== undefined) fd.append('time', String(currentTime))
+  return request<BehaviorDetectResult>({
+    url: `/classroom/videos/${videoId}/detect-frame`,
+    method: 'post',
+    data: fd,
+    params: { conf },
+    timeout: 120000,
+    signal,
+  })
+}

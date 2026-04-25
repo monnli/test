@@ -19,12 +19,14 @@ dashscope==1.20.3
 # 真实 AI 模型依赖（可选）：如需使用真实推理，取消对应注释
 # =============================================================
 # ----- CV 基础 -----
-# opencv-python-headless==4.10.0.84
-# torch==2.3.1
-# torchvision==0.18.1
+opencv-python-headless==4.10.0.84
 
-# ----- 行为检测：YOLOv8 -----
-# ultralytics==8.2.79
+# ----- 行为检测：YOLOv8（上传视频/行为检测必需）-----
+ultralytics==8.2.79
+
+# ----- PyTorch（CPU 版；如需 GPU 请自行安装对应 CUDA 版本）-----
+torch==2.3.1
+torchvision==0.18.1
 
 # ----- 人脸识别：InsightFace -----
 # insightface==0.7.3

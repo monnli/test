@@ -43,6 +43,9 @@ openpyxl==3.1.4
 pandas==2.2.2
 numpy==1.26.4
 
+# 视频抽帧（上传视频分析 worker 需要）
+opencv-python-headless==4.10.0.84
+
 # ===== AI 调用 =====
 dashscope==1.20.3
 

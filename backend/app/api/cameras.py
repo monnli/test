@@ -5,7 +5,13 @@ from __future__ import annotations
 from flask import Blueprint, request
 
 from ..services import camera_service as svc
-from ..utils.permissions import admin_required, get_current_user, login_required
+from ..utils.permissions import (
+    admin_required,
+    compute_data_scope,
+    get_current_user,
+    get_visible_class_ids,
+    login_required,
+)
 from ..utils.response import ok
 
 cameras_bp = Blueprint("cameras", __name__)
@@ -48,10 +54,18 @@ def remove_camera(cam_id: int):
 @cameras_bp.get("/schedules")
 @login_required
 def list_schedules():
+    user = get_current_user()
+    scope = compute_data_scope(user)
+    visible_class_ids = get_visible_class_ids(user)
+
     items = svc.list_schedules(
         class_id=request.args.get("class_id", type=int),
         teacher_id=request.args.get("teacher_id", type=int),
         weekday=request.args.get("weekday", type=int),
+        class_ids=visible_class_ids,
+        subject_filters=scope.subject_filters,
+        all_subjects_in_class_ids=scope.all_subjects_in_class_ids,
+        is_full=scope.is_full,
     )
     return ok({"items": items, "total": len(items)})
 

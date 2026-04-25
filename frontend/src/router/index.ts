@@ -46,7 +46,7 @@ const routes: RouteRecordRaw[] = [
           {
             path: 'schools',
             component: () => import('@/views/org/Schools.vue'),
-            meta: { title: '学校管理', requiresAdmin: true },
+            meta: { title: '学校管理', requiresSuper: true },
           },
           {
             path: 'grades',
@@ -107,7 +107,7 @@ const routes: RouteRecordRaw[] = [
           },
         ],
       },
-      // 课堂分析（默认跳摄像头墙；视频上传/笔记本摄像头页面从菜单移除但保留可直达）
+      // 课堂分析：摄像头墙 + 课表 + 视频上传分析
       {
         path: 'classroom',
         meta: { title: '课堂分析' },
@@ -117,7 +117,9 @@ const routes: RouteRecordRaw[] = [
           { path: 'camera-manage', component: () => import('@/views/classroom/CameraManage.vue'), meta: { title: '摄像头管理', requiresAdmin: true } },
           { path: 'live/:cameraId', component: () => import('@/views/classroom/CameraLive.vue'), meta: { title: '实时直播' } },
           { path: 'schedule', component: () => import('@/views/classroom/Schedule.vue'), meta: { title: '课表管理' } },
-          // 保留但不入菜单（Demo Mode / 历史链接兼容）
+          { path: 'videos', component: () => import('@/views/classroom/Videos.vue'), meta: { title: '视频库' } },
+          { path: 'upload', component: () => import('@/views/classroom/Upload.vue'), meta: { title: '上传视频' } },
+          { path: 'realtime', component: () => import('@/views/classroom/Realtime.vue'), meta: { title: '笔记本摄像头' } },
           { path: 'video/:videoId', component: () => import('@/views/classroom/VideoTasks.vue'), meta: { title: '视频任务' } },
           { path: 'task/:taskId', component: () => import('@/views/classroom/TaskDetail.vue'), meta: { title: '分析报告' } },
         ],
@@ -211,6 +213,11 @@ router.beforeEach(async (to, _from, next) => {
   }
 
   if (to.meta?.requiresAdmin && !userStore.isAdmin) {
+    next({ path: '/workbench' })
+    return
+  }
+
+  if (to.meta?.requiresSuper && !userStore.userInfo?.is_super) {
     next({ path: '/workbench' })
     return
   }

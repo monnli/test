@@ -146,6 +146,7 @@ interface MenuItem {
   icon: any
   children?: MenuItem[]
   requiresAdmin?: boolean
+  requiresSuper?: boolean
 }
 
 const menu: MenuItem[] = [
@@ -156,7 +157,7 @@ const menu: MenuItem[] = [
     title: '组织架构',
     icon: OfficeBuilding,
     children: [
-      { path: '/org/schools', title: '学校管理', icon: OfficeBuilding, requiresAdmin: true },
+      { path: '/org/schools', title: '学校管理', icon: OfficeBuilding, requiresSuper: true },
       { path: '/org/grades', title: '年级管理', icon: OfficeBuilding },
       { path: '/org/classes', title: '班级管理', icon: OfficeBuilding },
       { path: '/org/students', title: '学生管理', icon: Avatar },
@@ -174,6 +175,8 @@ const menu: MenuItem[] = [
       { path: '/classroom/cameras', title: '摄像头墙', icon: Monitor },
       { path: '/classroom/camera-manage', title: '摄像头管理', icon: Setting, requiresAdmin: true },
       { path: '/classroom/schedule', title: '课表管理', icon: Notebook },
+      { path: '/classroom/videos', title: '视频库', icon: VideoCamera },
+      { path: '/classroom/upload', title: '上传视频', icon: VideoCamera },
     ],
   },
   { path: '/psychology', title: '心理健康', icon: Histogram },
@@ -209,7 +212,7 @@ const menu: MenuItem[] = [
 const visibleMenu = computed(() => {
   const filter = (items: MenuItem[]): MenuItem[] => {
     return items
-      .filter((it) => !it.requiresAdmin || userStore.isAdmin)
+      .filter((it) => (!it.requiresAdmin || userStore.isAdmin) && (!it.requiresSuper || userStore.userInfo?.is_super))
       .map((it) =>
         it.children ? { ...it, children: filter(it.children) } : it,
       )
